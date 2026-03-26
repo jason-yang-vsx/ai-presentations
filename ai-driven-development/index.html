@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 驅動的一夜開發 — swift-socket 遷移全流程</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #059669;
+    --primary-light: #10B981;
+    --primary-dark: #047857;
+    --accent: #FBBF24;
+    --bg: #ECFDF5;
+    --bg-white: #FFFFFF;
+    --bg-card: #F0FDF4;
+    --text: #064E3B;
+    --text-muted: #065F46;
+    --text-light: #6EE7B7;
+    --border: #A7F3D0;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    --success: #10B981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Open Sans', sans-serif;
+    background: #0F172A;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+    padding: 60px 100px;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; }
+
+  /* Slide Backgrounds */
+  .bg-gradient {
+    background: linear-gradient(135deg, #064E3B 0%, #047857 40%, #059669 100%);
+    color: #ECFDF5;
+  }
+  .bg-white {
+    background: #FFFFFF;
+    color: var(--text);
+  }
+  .bg-light {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .bg-dark {
+    background: linear-gradient(135deg, #022c22 0%, #064E3B 100%);
+    color: #ECFDF5;
+  }
+  .bg-accent {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+    color: #ECFDF5;
+  }
+
+  /* Typography */
+  h1, h2, h3 { font-family: 'Poppins', 'Noto Sans TC', sans-serif; }
+  h1 { font-size: 96px; font-weight: 800; line-height: 1.05; letter-spacing: -2px; }
+  h2 { font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
+  h3 { font-size: 42px; font-weight: 600; line-height: 1.15; }
+  .subtitle { font-size: 36px; font-weight: 300; line-height: 1.3; opacity: 0.85; }
+  .body-text { font-size: 28px; line-height: 1.5; }
+  .small-text { font-size: 24px; line-height: 1.4; }
+  .label { font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; }
+  .meta { font-size: 28px; opacity: 0.7; }
+
+  /* Layout helpers */
+  .center-stack {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 24px;
+  }
+  .left-stack {
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    width: 100%;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    width: 100%;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(5,150,105,0.08);
+  }
+  .card-dark {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08));
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 28px; margin-bottom: 12px; color: var(--primary); }
+  .card-dark h3 { color: var(--accent); }
+
+  /* Tags & Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+  .badge-yellow { background: #FEF3C7; color: #92400E; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-dark { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+  .badge-purple { background: #EDE9FE; color: #5B21B6; }
+  .badge-orange { background: #FED7AA; color: #9A3412; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 22px;
+  }
+  table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table tr:nth-child(even) { background: var(--bg-card); }
+  table th:first-child { border-radius: 10px 0 0 0; }
+  table th:last-child { border-radius: 0 10px 0 0; }
+
+  .table-dark th { background: rgba(16,185,129,0.3); color: #ECFDF5; }
+  .table-dark td { border-bottom: 1px solid rgba(255,255,255,0.1); color: #D1FAE5; }
+  .table-dark tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+
+  .table-compact { font-size: 18px; }
+  .table-compact th { padding: 8px 12px; font-size: 16px; }
+  .table-compact td { padding: 6px 12px; }
+
+  .table-small { font-size: 16px; }
+  .table-small th { padding: 6px 10px; font-size: 14px; }
+  .table-small td { padding: 5px 10px; }
+
+  /* List */
+  ul { list-style: none; padding: 0; }
+  ul li {
+    font-size: 26px;
+    padding: 8px 0;
+    padding-left: 32px;
+    position: relative;
+    line-height: 1.4;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-light);
+    border-radius: 50%;
+  }
+  .bg-gradient ul li::before,
+  .bg-dark ul li::before,
+  .bg-accent ul li::before { background: var(--accent); }
+
+  /* KPI */
+  .kpi { text-align: center; }
+  .kpi-number {
+    font-family: 'Poppins', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 24px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .bg-gradient .kpi-number,
+  .bg-dark .kpi-number { color: var(--accent); }
+  .bg-gradient .kpi-label,
+  .bg-dark .kpi-label { color: #A7F3D0; }
+
+  /* Code block */
+  .code-block {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 18px;
+    color: #E2E8F0;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .comment { color: #64748B; }
+  .code-block .keyword { color: #38BDF8; }
+  .code-block .string { color: #6EE7B7; }
+  .code-block .number { color: #FBBF24; }
+
+  /* Big command */
+  .big-command {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,0,0,0.3);
+    padding: 24px 48px;
+    border-radius: 16px;
+    border: 2px solid rgba(251,191,36,0.3);
+    text-align: center;
+    letter-spacing: -1px;
+  }
+
+  /* Diagram */
+  .diagram-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .diagram-arrow {
+    font-size: 28px;
+    color: var(--primary-light);
+    margin: 0 10px;
+  }
+  .bg-dark .diagram-arrow { color: var(--accent); }
+
+  /* Progress */
+  .progress-bar {
+    height: 10px;
+    background: var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 5px;
+  }
+
+  /* Decorative elements */
+  .corner-decor {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .corner-decor.top-right {
+    top: -100px; right: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+  .corner-decor.bottom-left {
+    bottom: -100px; left: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+
+  /* Page number */
+  .page-num {
+    position: absolute;
+    bottom: 30px;
+    right: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.4;
+  }
+
+  /* Section title bar */
+  .section-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--accent));
+  }
+
+  /* Slide title area */
+  .slide-header {
+    margin-bottom: 24px;
+    width: 100%;
+  }
+  .slide-header h2 { font-size: 46px; margin-bottom: 4px; }
+  .slide-header .label { margin-bottom: 8px; display: block; }
+
+  /* Highlight */
+  .highlight { color: var(--accent); }
+  .highlight-green { color: var(--primary-light); }
+  .highlight-red { color: var(--danger); }
+
+  /* Navigation */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+
+  /* Image slide */
+  .img-slide.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .img-slide img {
+    max-width: 80%;
+    max-height: 70vh;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    object-fit: contain;
+  }
+  .slide img {
+    max-width: 80%;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+
+  /* Flow diagram */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .status-icon { font-size: 24px; margin-right: 6px; }
+  .check { color: #10B981; }
+  .cross { color: #EF4444; }
+  .warn { color: #F59E0B; }
+
+  /* Timeline */
+  .timeline-phase {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .phase-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px;
+    font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+  }
+
+  /* Big quote */
+  .big-quote {
+    font-size: 48px;
+    font-weight: 700;
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    line-height: 1.3;
+    max-width: 1000px;
+    text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 1400px) {
+    .slide { padding: 50px 70px; }
+    h1 { font-size: 72px; }
+    h2 { font-size: 52px; }
+    h3 { font-size: 34px; }
+    .slide-header h2 { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ============================================ -->
+<!-- SLIDE 1: 封面 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack active" id="s1">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#A7F3D0;">ClassSwift Platform Engineering</span>
+  <h1 style="max-width:1200px;font-size:80px;">AI 驅動的<br>一夜開發</h1>
+  <p class="subtitle" style="max-width:900px;margin-top:12px;">
+    swift-socket 遷移全流程 — Python Socket.IO to Node.js
+  </p>
+  <div style="margin-top:24px;">
+    <span class="meta">Jason Yang</span>
+    <span class="meta" style="margin:0 16px;">|</span>
+    <span class="meta">2026-03-25</span>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">1 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 2: 一句話總結 -->
+<!-- ============================================ -->
+<div class="slide bg-dark center-stack" id="s2">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#6EE7B7;">TL;DR</span>
+  <p class="big-quote" style="color:#ECFDF5;">
+    一行指令，睡一覺，<br>起來收穫<span class="highlight">完整伺服器</span>
+  </p>
+  <div style="display:flex;gap:48px;margin-top:36px;">
+    <div class="kpi">
+      <div class="kpi-number">1,753</div>
+      <div class="kpi-label">行原始碼</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">85</div>
+      <div class="kpi-label">個測試</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">30+</div>
+      <div class="kpi-label">atomic commits</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">3h20m</div>
+      <div class="kpi-label">總耗時</div>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">2 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 3: 議程 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s3">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">AGENDA</span>
+    <h2>今天的議程</h2>
+  </div>
+  <div class="two-col" style="margin-top:16px;">
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 1</h3>
+        <p class="body-text">為什麼要做 — Python Socket.IO 的結構性問題</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 2</h3>
+        <p class="body-text">Agent Teams 跨專案研究</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 3</h3>
+        <p class="body-text">三輪驗證與架構決策</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 4</h3>
+        <p class="body-text">人類做決策 — 5 個關鍵選擇</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 5</h3>
+        <p class="body-text">設計徹夜開發計劃</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 6</h3>
+        <p class="body-text">一夜自動開發 — 執行全記錄</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 7</h3>
+        <p class="body-text">最終成果 + 工具鏈全景</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:24px;">Part 8</h3>
+        <p class="body-text">關鍵學習與結語</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">3 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 4: Python Socket.IO 4 個結構性問題 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s4">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 1 — 為什麼要做</span>
+    <h2>Python Socket.IO 的 4 個結構性問題</h2>
+  </div>
+  <table>
+    <tr>
+      <th>#</th>
+      <th>問題</th>
+      <th>根因</th>
+      <th>為何 Python 無法解決</th>
+      <th></th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><strong>單 worker 瓶頸</strong></td>
+      <td>Python socket.io 無 Cluster Adapter</td>
+      <td>Node.js 有 Redis Streams Adapter 支援多 pod</td>
+      <td><span class="badge badge-red">P0</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>Redis 斷線丟包</strong></td>
+      <td>Python 只有 Pub/Sub Manager</td>
+      <td>Node.js 有 Redis Streams Adapter (at-least-once)</td>
+      <td><span class="badge badge-red">P0</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>斷線重連體驗差</strong></td>
+      <td>Python 無 Connection State Recovery</td>
+      <td>Node.js v4.6+ 原生支援</td>
+      <td><span class="badge badge-red">P0</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>維護風險</strong></td>
+      <td>Python socket.io 為個人維護</td>
+      <td>Node.js Socket.IO 為官方團隊維護</td>
+      <td><span class="badge badge-red">P0</span></td>
+    </tr>
+  </table>
+  <div class="page-num">4 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: 已修復但治標 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s5">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 1 — 為什麼要做</span>
+    <h2>已修復但治標的 2 個問題</h2>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h3 style="color:var(--warning);">NLB L4 無 Session Affinity</h3>
+      <p class="small-text" style="margin-bottom:8px;"><strong>修法：</strong>加入 stickyId consistent hash</p>
+      <p class="small-text" style="color:var(--danger);"><strong>為什麼是治標：</strong>仍受限於 Istio L7 routing 限制</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--warning);">同 Pod 找不到 SID</h3>
+      <p class="small-text" style="margin-bottom:8px;"><strong>修法：</strong><code>--workers 1</code> 單 worker 模式</p>
+      <p class="small-text" style="color:var(--danger);"><strong>為什麼是治標：</strong>無法水平擴展</p>
+    </div>
+  </div>
+  <div class="card-accent" style="margin-top:24px;text-align:center;padding:20px;">
+    <p class="body-text" style="font-weight:600;">結論：需要遷移到 Node.js Socket.IO — 這不是 patch 能解決的問題</p>
+  </div>
+  <div class="page-num">5 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: Agent Teams 研究範圍 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s6">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 2 — Agent Teams 研究</span>
+    <h2>4 個 Repository 研究範圍</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <table class="table-compact">
+        <tr>
+          <th>Repository</th>
+          <th>角色</th>
+          <th>研究重點</th>
+        </tr>
+        <tr>
+          <td><strong>ocelot</strong></td>
+          <td>Python FastAPI</td>
+          <td>33 個事件映射、Redis Streams</td>
+        </tr>
+        <tr>
+          <td><strong>sand-cat</strong></td>
+          <td>ArgoCD GitOps</td>
+          <td>Helm charts、Istio 配置</td>
+        </tr>
+        <tr>
+          <td><strong>cougar</strong></td>
+          <td>AWS CDK</td>
+          <td>EKS、ElastiCache、NLB</td>
+        </tr>
+        <tr>
+          <td><strong>swift-socket</strong></td>
+          <td>新專案（目標）</td>
+          <td>Socket.IO v4 最佳實踐</td>
+        </tr>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <img src="img/agent-teams-research.png" alt="Agent Teams Research" style="max-width:100%;max-height:50vh;">
+    </div>
+  </div>
+  <div class="page-num">6 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 7: 研究發現 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s7">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 2 — Agent Teams 研究</span>
+    <h2>研究發現</h2>
+  </div>
+  <div class="two-col">
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Ocelot 架構映射</h3>
+      <p class="small-text">23 個模組、33 個 Socket.IO 事件<br>(18 teacher + 14 participant + 1 hub)</p>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3>部署基礎設施</h3>
+      <p class="small-text">ElastiCache Redis 7.1 支援 Streams<br>NLB TCP idle timeout 可設 600s</p>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Istio 路由可行性</h3>
+      <p class="small-text">TCP keepalive < 120s<br>Header-based routing 區分 /api/* 和 WebSocket</p>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Socket.IO v4 相容性</h3>
+      <p class="small-text">Engine.IO v4 protocol<br>Client v3+ 可連</p>
+    </div>
+  </div>
+  <div class="page-num">7 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 8: Round 1 深層風險 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s8">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 3 — 三輪驗證</span>
+    <h2>Round 1：深層風險評估</h2>
+  </div>
+  <p class="body-text" style="margin-bottom:16px;">發現 <strong>7 個盲點</strong>、<strong>12 項架構風險</strong></p>
+  <table class="table-compact">
+    <tr>
+      <th>風險類別</th>
+      <th>關鍵發現</th>
+      <th>影響</th>
+      <th></th>
+    </tr>
+    <tr>
+      <td><strong>Adapter 衝突</strong></td>
+      <td>io.adapter() 只接受一個 — Cluster + Streams 無法共存</td>
+      <td>改用 HPA 水平擴展</td>
+      <td><span class="badge badge-red">嚴重</span></td>
+    </tr>
+    <tr>
+      <td><strong>雙軌不可行</strong></td>
+      <td>Redis Pub/Sub 和 Streams 格式不互通</td>
+      <td>改用 per-org feature flag</td>
+      <td><span class="badge badge-red">嚴重</span></td>
+    </tr>
+    <tr>
+      <td><strong>Redis 容量</strong></td>
+      <td>Stream 無 TTL，MAXLEN 未設限</td>
+      <td>設 ~ 10000 MAXLEN</td>
+      <td><span class="badge badge-yellow">高</span></td>
+    </tr>
+    <tr>
+      <td><strong>Socket 含業務邏輯</strong></td>
+      <td>on_join_lesson 查 DB、改 Task 狀態</td>
+      <td>抽出為 Ocelot REST API</td>
+      <td><span class="badge badge-yellow">高</span></td>
+    </tr>
+    <tr>
+      <td><strong>WebSocket Header</strong></td>
+      <td>瀏覽器 WebSocket API 不允許自訂 HTTP headers</td>
+      <td>用 cookie 做路由</td>
+      <td><span class="badge badge-blue">中</span></td>
+    </tr>
+  </table>
+  <div class="page-num">8 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 9: Round 2 事件審計 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s9">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 3 — 三輪驗證</span>
+    <h2>Round 2：完整事件審計</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="kpi" style="text-align:left;">
+          <div class="kpi-number" style="font-size:56px;">33</div>
+          <div class="kpi-label" style="color:var(--text-muted);">個 Socket.IO 事件</div>
+        </div>
+        <p class="small-text" style="margin-top:12px;">events.ts 原始覆蓋率：<span class="highlight-red"><strong>45%</strong></span>（15/33），非初估 60%</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:24px;">完整事件清單</h3>
+        <p class="small-text">33 個事件的 payload 結構全部定義完成</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="font-size:24px;">Handler 分類</h3>
+        <div style="margin-top:12px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <span class="badge badge-red" style="min-width:40px;text-align:center;">7</span>
+            <span class="small-text">需同步驗證（通過 Ocelot REST API）</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <span class="badge badge-green" style="min-width:40px;text-align:center;">7</span>
+            <span class="small-text">純轉發（無驗證邏輯）</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-blue" style="min-width:40px;text-align:center;">19</span>
+            <span class="small-text">非同步 fire-and-forget</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">9 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 10: Round 3 最終確認 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s10">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 3 — 三輪驗證</span>
+    <h2>Round 3：最終架構確認</h2>
+  </div>
+  <div class="three-col">
+    <div class="card" style="text-align:center;">
+      <div class="kpi-number" style="font-size:48px;">43</div>
+      <div class="kpi-label">個參考來源</div>
+      <div style="margin-top:12px;">
+        <span class="badge badge-green">81% 完全確認</span>
+        <span class="badge badge-yellow" style="margin-left:4px;">14% 小調整</span>
+        <span class="badge badge-red" style="margin-left:4px;">5% 更正</span>
+      </div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <h3 style="font-size:24px;">Redis 容量規劃</h3>
+      <p class="small-text" style="margin-top:8px;">現有 1.7 MB + 新增 18 MB</p>
+      <p class="body-text" style="font-weight:700;color:var(--primary);margin-top:4px;">= 20 MB</p>
+      <p class="small-text" style="opacity:0.7;">cache.t4g.medium 3GB 的 0.67%</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="kpi-number" style="font-size:48px;">7</div>
+      <div class="kpi-label">Internal REST API 規格</div>
+      <p class="small-text" style="margin-top:8px;">Lesson 驗證、教師 SID 查詢、競賽狀態讀寫等</p>
+    </div>
+  </div>
+  <div class="page-num">10 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 11: 5 個關鍵決策 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s11">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 4 — 人類做決策</span>
+    <h2>5 個關鍵決策</h2>
+  </div>
+  <table class="table-compact">
+    <tr>
+      <th>#</th>
+      <th>決策</th>
+      <th>選項</th>
+      <th>最終選擇</th>
+      <th>理由</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Transport</td>
+      <td>WebSocket-only vs 預設</td>
+      <td><span class="badge badge-green">保留預設</span></td>
+      <td>多平台、企業防火牆、零前端改動</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>專案定位</td>
+      <td>嵌入 Ocelot vs 獨立</td>
+      <td><span class="badge badge-green">獨立 — 純 Event Router</span></td>
+      <td>不直連 DB，職責單一</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>通訊協定</td>
+      <td>Pub/Sub vs Streams vs gRPC</td>
+      <td><span class="badge badge-green">Streams + REST API</span></td>
+      <td>at-least-once、既有基礎</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>擴展策略</td>
+      <td>Cluster Adapter vs HPA</td>
+      <td><span class="badge badge-green">單 worker/pod + HPA</span></td>
+      <td>Adapter 衝突</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>雙軌切換</td>
+      <td>Istio split vs Feature Flag</td>
+      <td><span class="badge badge-green">Per-org Feature Flag</span></td>
+      <td>WebSocket 有狀態</td>
+    </tr>
+  </table>
+  <div class="page-num">11 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 12: 遷移推出 4 階段 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s12">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 4 — 人類做決策</span>
+    <h2>遷移推出 4 階段</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="timeline-phase" style="background:var(--bg-card);">
+        <div class="phase-num" style="background:var(--primary);color:white;">1</div>
+        <div>
+          <strong class="body-text">QA org 測試</strong>
+          <p class="small-text" style="opacity:0.7;">內部測試環境驗證</p>
+        </div>
+      </div>
+      <div class="timeline-phase" style="background:var(--bg-card);">
+        <div class="phase-num" style="background:var(--primary);color:white;">2</div>
+        <div>
+          <strong class="body-text">漸進 prod orgs</strong>
+          <p class="small-text" style="opacity:0.7;">低風險 org 先上</p>
+        </div>
+      </div>
+      <div class="timeline-phase" style="background:var(--bg-card);">
+        <div class="phase-num" style="background:var(--primary);color:white;">3</div>
+        <div>
+          <strong class="body-text">完全遷移</strong>
+          <p class="small-text" style="opacity:0.7;">所有 org 切到 swift-socket</p>
+        </div>
+      </div>
+      <div class="timeline-phase" style="background:var(--bg-card);">
+        <div class="phase-num" style="background:var(--primary);color:white;">4</div>
+        <div>
+          <strong class="body-text">清理</strong>
+          <p class="small-text" style="opacity:0.7;">移除 Python socket 相關程式碼</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <img src="img/human-vs-ai.png" alt="Human vs AI" style="max-width:100%;max-height:55vh;">
+    </div>
+  </div>
+  <div class="page-num">12 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 13: 白天準備工作 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s13">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 5 — 設計徹夜計劃</span>
+    <h2>白天的準備工作（約 4 小時）</h2>
+  </div>
+  <table>
+    <tr>
+      <th>工作項目</th>
+      <th>產出</th>
+      <th>重要性</th>
+    </tr>
+    <tr>
+      <td><strong>908 行設計規格</strong></td>
+      <td>overnight design spec</td>
+      <td>定義 40 個迭代、33 事件 payload、7 API 規格</td>
+    </tr>
+    <tr>
+      <td><strong>CONSTITUTION.md</strong></td>
+      <td>6 原則 + 8 約束</td>
+      <td>讓 AI 知道什麼能做什麼不能做</td>
+    </tr>
+    <tr>
+      <td><strong>overnight-loop skill</strong></td>
+      <td>Backlog 驅動的自動調度器</td>
+      <td>核心 — AI 知道每次 loop 要做什麼</td>
+    </tr>
+    <tr>
+      <td><strong>Prospec SDD 工具鏈</strong></td>
+      <td>11 個 skill</td>
+      <td>new-story, plan, tasks, implement, verify...</td>
+    </tr>
+    <tr>
+      <td><strong>39 張投影片</strong></td>
+      <td>技術方案簡報</td>
+      <td>含 7 張 AI 生成架構圖</td>
+    </tr>
+  </table>
+  <div class="page-num">13 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 14: 三層自動化架構 -->
+<!-- ============================================ -->
+<div class="slide bg-dark img-slide" id="s14">
+  <div class="slide-header" style="text-align:center;">
+    <span class="label" style="color:#6EE7B7;">Part 5 — 設計徹夜計劃</span>
+    <h2 style="color:#ECFDF5;font-size:42px;">三層自動化架構</h2>
+  </div>
+  <img src="img/three-layer-automation.png" alt="三層自動化架構" style="max-height:65vh;">
+  <div class="page-num" style="color:#A7F3D0;">14 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 15: Story Backlog 設計 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s15">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 5 — 設計徹夜計劃</span>
+    <h2>Story Backlog 設計</h2>
+  </div>
+  <table>
+    <tr>
+      <th>順序</th>
+      <th>Story</th>
+      <th>Phase</th>
+      <th>迭代範圍</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><strong>SS-001</strong> Foundation & Core Infrastructure</td>
+      <td><span class="badge badge-blue">A</span></td>
+      <td>#1-6</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>SS-002</strong> Teacher Namespace</td>
+      <td><span class="badge badge-green">B</span></td>
+      <td>#7-12</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>SS-003</strong> Participant Namespace</td>
+      <td><span class="badge badge-green">B</span></td>
+      <td>#13-16</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>SS-004</strong> Hub & Redis Streams Consumer</td>
+      <td><span class="badge badge-green">B</span></td>
+      <td>#17-18</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>SS-005</strong> Comprehensive Testing</td>
+      <td><span class="badge badge-purple">C</span></td>
+      <td>#19-30</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><strong>SS-006</strong> Integration, Polish & Verification</td>
+      <td><span class="badge badge-orange">D</span></td>
+      <td>#31-40</td>
+    </tr>
+  </table>
+  <div class="page-num">15 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 16: 啟動方式 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack" id="s16">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.08;"></div>
+  <span class="label" style="color:#A7F3D0;">Part 6 — 一夜自動開發</span>
+  <h2 style="font-size:52px;">啟動方式</h2>
+  <div class="big-command">/loop 5m /overnight-loop</div>
+  <p class="big-quote" style="font-size:42px;margin-top:24px;opacity:0.9;">
+    打完這行就去睡了。
+  </p>
+  <div class="page-num" style="color:#A7F3D0;">16 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 17: 執行時間線 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s17">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 6 — 一夜自動開發</span>
+    <h2>執行時間線（3 小時 20 分鐘）</h2>
+  </div>
+  <table class="table-compact">
+    <tr>
+      <th>時間</th>
+      <th>Story</th>
+      <th>做了什麼</th>
+      <th>成果</th>
+    </tr>
+    <tr>
+      <td>02:30</td>
+      <td>SS-001</td>
+      <td>events.ts + config + SDD 補建</td>
+      <td>糾正後補建文件</td>
+    </tr>
+    <tr>
+      <td>03:15</td>
+      <td>SS-001</td>
+      <td>JWT auth + logging middleware 並行</td>
+      <td>Ocelot API client（7 endpoint）</td>
+    </tr>
+    <tr>
+      <td>03:40</td>
+      <td>SS-001</td>
+      <td>verify</td>
+      <td><span class="badge badge-green">Grade A</span> 推進 SS-002</td>
+    </tr>
+    <tr>
+      <td>04:20</td>
+      <td>SS-002</td>
+      <td>user-room + teacher 10 handler</td>
+      <td><span class="badge badge-green">Grade S</span> 推進 SS-003</td>
+    </tr>
+    <tr>
+      <td>04:45</td>
+      <td>SS-003</td>
+      <td>Fast-Forward + participant 4 handler</td>
+      <td><span class="badge badge-green">Grade S</span></td>
+    </tr>
+    <tr>
+      <td>05:05</td>
+      <td>SS-004</td>
+      <td>hub handler + Redis Streams consumer</td>
+      <td><span class="badge badge-green">Grade S</span> Phase B 完成</td>
+    </tr>
+    <tr>
+      <td>05:35</td>
+      <td>SS-005</td>
+      <td>auth + ocelot-api + 4 namespace tests</td>
+      <td>85 tests 全 green</td>
+    </tr>
+    <tr>
+      <td>05:47</td>
+      <td>SS-006</td>
+      <td>index.ts + /healthz + Helm</td>
+      <td><span class="badge badge-green">Grade S</span></td>
+    </tr>
+    <tr>
+      <td>05:50</td>
+      <td></td>
+      <td>最終報告</td>
+      <td>Backlog 全部完成</td>
+    </tr>
+  </table>
+  <div class="page-num">17 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 18: SDD 流程加速 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s18">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 6 — 一夜自動開發</span>
+    <h2>SDD 流程加速觀察</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <table class="table-compact">
+        <tr>
+          <th>Story</th>
+          <th>SDD 方式</th>
+          <th>說明</th>
+        </tr>
+        <tr>
+          <td>SS-001</td>
+          <td><span class="badge badge-blue">完整 SDD</span></td>
+          <td>第一次做，走完整流程</td>
+        </tr>
+        <tr>
+          <td>SS-002</td>
+          <td><span class="badge badge-blue">完整 SDD</span></td>
+          <td>建立 pattern</td>
+        </tr>
+        <tr>
+          <td>SS-003+</td>
+          <td><span class="badge badge-green">Fast-Forward</span></td>
+          <td>一次搞定 story + plan + tasks</td>
+        </tr>
+      </table>
+      <div class="card-accent" style="margin-top:20px;padding:20px;">
+        <p class="small-text"><strong>關鍵觀察：</strong>已掌握 pattern 後，Fast-Forward 省 2-3 個 loop 週期</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <img src="img/prospec-sdd-flow.png" alt="Prospec SDD Flow" style="max-width:100%;max-height:55vh;">
+    </div>
+  </div>
+  <div class="page-num">18 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 19: 量化指標 -->
+<!-- ============================================ -->
+<div class="slide bg-dark img-slide" id="s19">
+  <div class="slide-header" style="text-align:center;">
+    <span class="label" style="color:#6EE7B7;">Part 7 — 最終成果</span>
+    <h2 style="color:#ECFDF5;font-size:42px;">量化指標</h2>
+  </div>
+  <img src="img/overnight-results.png" alt="Overnight Results" style="max-height:60vh;">
+  <div class="page-num" style="color:#A7F3D0;">19 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 20: 產出檔案清單 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s20">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 7 — 最終成果</span>
+    <h2>產出檔案清單</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:28px;margin-bottom:12px;">原始碼（1,753 行）</h3>
+      <table class="table-compact">
+        <tr><th>檔案</th><th>行數</th><th>說明</th></tr>
+        <tr><td>events.ts</td><td>~350</td><td>42 個 payload interface</td></tr>
+        <tr><td>config/index.ts</td><td>27</td><td>11 個環境變數</td></tr>
+        <tr><td>auth.ts</td><td>67</td><td>JWT HS256 認證</td></tr>
+        <tr><td>logging.ts</td><td>111</td><td>結構化 JSON logger</td></tr>
+        <tr><td>ocelot-api.ts</td><td>362</td><td>7 API + retry + circuit breaker</td></tr>
+        <tr><td>user-room.ts</td><td>51</td><td>Private User Room</td></tr>
+        <tr><td>redis-streams.ts</td><td>228</td><td>XREADGROUP + DLQ</td></tr>
+        <tr><td>teacher.ts</td><td>177</td><td>10 handler + lifecycle</td></tr>
+        <tr><td>participant.ts</td><td>180</td><td>4 handler + 轉換</td></tr>
+        <tr><td>hub.ts</td><td>43</td><td>force logout + org room</td></tr>
+        <tr><td>index.ts</td><td>80</td><td>/healthz + shutdown</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size:28px;margin-bottom:12px;">測試（2,854 行 / 85 個）</h3>
+      <table class="table-compact">
+        <tr><th>測試檔案</th><th>數量</th><th>涵蓋範圍</th></tr>
+        <tr><td>auth.test.ts</td><td>8</td><td>JWT 全場景</td></tr>
+        <tr><td>ocelot-api.test.ts</td><td>22</td><td>7 API + circuit breaker</td></tr>
+        <tr><td>redis-streams.test.ts</td><td>12</td><td>routing + DLQ</td></tr>
+        <tr><td>teacher.test.ts</td><td>15</td><td>10 handler + lifecycle</td></tr>
+        <tr><td>participant.test.ts</td><td>11</td><td>4 handler</td></tr>
+        <tr><td>hub.test.ts</td><td>6</td><td>force logout</td></tr>
+        <tr><td>server.test.ts</td><td>11</td><td>跨模組整合</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="page-num">20 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 21: 工具鏈五層全景 -->
+<!-- ============================================ -->
+<div class="slide bg-dark img-slide" id="s21">
+  <div class="slide-header" style="text-align:center;">
+    <span class="label" style="color:#6EE7B7;">Part 8 — 工具鏈全景</span>
+    <h2 style="color:#ECFDF5;font-size:42px;">工具鏈五層全景 — 67 個組件</h2>
+  </div>
+  <img src="img/toolchain-5-layers.png" alt="Toolchain 5 Layers" style="max-height:65vh;">
+  <div class="page-num" style="color:#A7F3D0;">21 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 22: gstack 影響 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s22">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 8 — 工具鏈全景</span>
+    <h2 style="font-size:40px;">gstack 影響 — 虛擬工程團隊框架</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:24px;margin-bottom:12px;">4 個核心原則</h3>
+      <div class="card" style="padding:16px;margin-bottom:8px;">
+        <strong>Boil the Lake</strong>
+        <span class="small-text" style="display:block;margin-top:4px;">三輪驗證 + 43 個參考源交叉比對</span>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:8px;">
+        <strong>Search Before Building</strong>
+        <span class="small-text" style="display:block;margin-top:4px;">跨 4 個 repo 全面研究，不直接開工</span>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:8px;">
+        <strong>The Compression Insight</strong>
+        <span class="small-text" style="display:block;margin-top:4px;">一夜寫完原本 1-2 週的工作量</span>
+      </div>
+      <div class="card" style="padding:16px;">
+        <strong>Build for Yourself</strong>
+        <span class="small-text" style="display:block;margin-top:4px;">所有 skill 為這個遷移專案量身打造</span>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:24px;margin-bottom:12px;">6 個借鑑模式</h3>
+      <table class="table-compact">
+        <tr><th>模式</th><th>適配</th></tr>
+        <tr><td>Model 分工策略</td><td>Haiku / Sonnet / Opus 分流</td></tr>
+        <tr><td>Agent 並行編排</td><td>無依賴工作必須並行</td></tr>
+        <tr><td>結構化 Code Review</td><td>socket-reviewer + verify</td></tr>
+        <tr><td>自動化 Ship 流程</td><td>SDD 狀態機（更嚴格）</td></tr>
+        <tr><td>Evidence-Based 驗證</td><td>Grade 系統（S/A/B/C/D）</td></tr>
+        <tr><td>Skill 外部化</td><td>23 project skills + 11 Prospec</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="page-num">22 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 23: Superpowers + ECC -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s23">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 8 — 工具鏈全景</span>
+    <h2 style="font-size:40px;">Superpowers + Everything Claude Code</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:24px;margin-bottom:12px;">Superpowers — 7 個 Workflow Skills</h3>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>brainstorming</strong> — 探索需求、比較方案
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>writing-plans</strong> — 908 行設計規格
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>executing-plans</strong> — 按計劃逐步執行
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>dispatching-parallel-agents</strong> — 2-4 agent 並行
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>requesting-code-review</strong> — 確認實作符合規格
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:6px;font-size:20px;">
+        <strong>verification-before-completion</strong> — tsc + test
+      </div>
+      <div class="card" style="padding:16px;font-size:20px;">
+        <strong>using-git-worktrees</strong> — Agent 隔離
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:24px;margin-bottom:12px;">ECC — 4 個專業 Agents</h3>
+      <div class="card-accent" style="padding:20px;margin-bottom:10px;">
+        <h3 style="font-size:22px;">build-error-resolver</h3>
+        <p class="small-text">Build 修復專家 — tsc 零錯誤 + ESLint 修復</p>
+      </div>
+      <div class="card-accent" style="padding:20px;margin-bottom:10px;">
+        <h3 style="font-size:22px;">tdd-guide</h3>
+        <p class="small-text">TDD 測試專家 — 85 個 tests (RED-GREEN-REFACTOR)</p>
+      </div>
+      <div class="card-accent" style="padding:20px;margin-bottom:10px;">
+        <h3 style="font-size:22px;">code-reviewer</h3>
+        <p class="small-text">Code Review 專家 — 品質、安全、可維護性</p>
+      </div>
+      <div class="card-accent" style="padding:20px;">
+        <h3 style="font-size:22px;">planner</h3>
+        <p class="small-text">實作規劃專家 — 拆解為可執行迭代計劃</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">23 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 24: Prospec SDD + 領域 Skills -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s24">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 8 — 工具鏈全景</span>
+    <h2 style="font-size:40px;">Prospec SDD + 領域 Skills</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:22px;margin-bottom:8px;">11 個 Prospec SDD Skills</h3>
+      <table class="table-small">
+        <tr><th>技能</th><th>用途</th></tr>
+        <tr><td>/prospec-new-story</td><td>建立 User Story + 驗收標準</td></tr>
+        <tr><td>/prospec-plan</td><td>轉換 Story 為實作計劃</td></tr>
+        <tr><td>/prospec-tasks</td><td>拆解計劃為任務清單</td></tr>
+        <tr><td>/prospec-implement</td><td>按 tasks.md 逐項實作</td></tr>
+        <tr><td>/prospec-verify</td><td>5+1 維度品質審計 + Grade</td></tr>
+        <tr><td>/prospec-ff</td><td>Fast-Forward 一次搞定</td></tr>
+        <tr><td>/prospec-explore</td><td>需求探索、方案比較</td></tr>
+        <tr><td>/prospec-knowledge-*</td><td>AI Knowledge 生成/更新</td></tr>
+        <tr><td>/prospec-archive</td><td>歸檔完成的變更</td></tr>
+        <tr><td>/prospec-design</td><td>視覺/互動規格</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size:22px;margin-bottom:8px;">5 個領域專業 Skills</h3>
+      <div class="card" style="padding:14px;margin-bottom:6px;font-size:18px;">
+        <strong>socketio-patterns</strong> — Socket.IO v4 最佳實踐（1,127 行）
+      </div>
+      <div class="card" style="padding:14px;margin-bottom:6px;font-size:18px;">
+        <strong>redis-streams-patterns</strong> — Consumer/Producer 模式
+      </div>
+      <div class="card" style="padding:14px;margin-bottom:6px;font-size:18px;">
+        <strong>ocelot-bridge</strong> — Python to TS 33 事件遷移映射
+      </div>
+      <div class="card" style="padding:14px;margin-bottom:6px;font-size:18px;">
+        <strong>sand-cat-infra</strong> — ArgoCD + Helm + Istio 配置
+      </div>
+      <div class="card" style="padding:14px;font-size:18px;">
+        <strong>cougar-infra</strong> — AWS CDK + EKS + Redis + NLB
+      </div>
+      <div style="margin-top:16px;">
+        <h3 style="font-size:22px;margin-bottom:8px;">1 個核心自動化 Skill</h3>
+        <div class="card-accent" style="padding:16px;font-size:20px;">
+          <strong>/overnight-loop</strong> — Backlog 驅動 SDD 狀態機
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">24 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 25: 人類 vs AI 分工 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s25">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 9 — 關鍵學習</span>
+    <h2>人類 vs AI 的分工</h2>
+  </div>
+  <div class="two-col">
+    <div class="card" style="border-left:4px solid var(--primary);">
+      <h3 style="font-size:28px;">人類的工作（白天）</h3>
+      <ul style="margin-top:12px;">
+        <li style="font-size:22px;">跨專案研究（指導 Agent 方向）</li>
+        <li style="font-size:22px;">技術決策（5 個關鍵架構決策）</li>
+        <li style="font-size:22px;">設計規格（908 行 overnight spec）</li>
+        <li style="font-size:22px;">CONSTITUTION.md（原則與約束）</li>
+        <li style="font-size:22px;">overnight-loop skill（自動化邏輯）</li>
+        <li style="font-size:22px;">品質標準定義（SDD 流程）</li>
+      </ul>
+      <div class="card-accent" style="margin-top:12px;padding:12px;text-align:center;">
+        <strong>策略、決策、架構、標準</strong>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--accent);">
+      <h3 style="font-size:28px;color:var(--warning);">AI 的工作（整晚）</h3>
+      <ul style="margin-top:12px;">
+        <li style="font-size:22px;">建立 SDD 文件（story/plan/tasks）</li>
+        <li style="font-size:22px;">實作 TypeScript 程式碼</li>
+        <li style="font-size:22px;">撰寫單元測試 + 整合測試</li>
+        <li style="font-size:22px;">Code review（socket-reviewer）</li>
+        <li style="font-size:22px;">Build 驗證（tsc + ESLint）</li>
+        <li style="font-size:22px;">Atomic commit + 進度更新</li>
+      </ul>
+      <div class="card-accent" style="margin-top:12px;padding:12px;text-align:center;">
+        <strong>執行、實作、測試、驗證</strong>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">25 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 26: 5 個踩坑教訓 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s26">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 9 — 關鍵學習</span>
+    <h2>5 個踩坑教訓</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card" style="border-top:3px solid var(--danger);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge badge-red">1</span>
+        <strong class="body-text">先 spec 再 code</strong>
+      </div>
+      <p class="small-text">迭代 #1-2 沒走 SDD 直接寫 — 被糾正補建文件。沒有 spec 約束的 AI 會偏離架構</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--warning);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge badge-yellow">2</span>
+        <strong class="body-text">需要全局調度器</strong>
+      </div>
+      <p class="small-text">最初 loop 不知道 Story 完成後要切下一個 — 重新設計 Backlog 驅動狀態機</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--info);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge badge-blue">3</span>
+        <strong class="body-text">Context 管理</strong>
+      </div>
+      <p class="small-text">用 TODO.md 追蹤狀態、skill 定義行為、design spec 定義規格，不堆在對話裡</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--success);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge badge-green">4</span>
+        <strong class="body-text">Agent 並行效率驚人</strong>
+      </div>
+      <p class="small-text">auth + logging 並行、teacher 6 迭代一次搞定、4 namespace tests 同時跑</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--primary);grid-column:1/3;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge badge-purple">5</span>
+        <strong class="body-text">SDD 後期可加速</strong>
+      </div>
+      <p class="small-text">前 2 Story 走完整 SDD，之後用 Fast-Forward 省 2-3 個 loop 週期</p>
+    </div>
+  </div>
+  <div class="page-num">26 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 27: 前提條件 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s27">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Part 10 — 結尾</span>
+    <h2>前提條件 — 不是打一行就能跑</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:22px;">完整技術決策文件</h3>
+      <p class="small-text" style="margin-top:6px;">AI 不會替你做架構決策</p>
+    </div>
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:22px;">詳細設計規格（908 行）</h3>
+      <p class="small-text" style="margin-top:6px;">每個事件 payload、每個 API 規格都要定義清楚</p>
+    </div>
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:22px;">CONSTITUTION.md</h3>
+      <p class="small-text" style="margin-top:6px;">明確的原則和約束，AI 才知道邊界</p>
+    </div>
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:22px;">overnight-loop skill</h3>
+      <p class="small-text" style="margin-top:6px;">Backlog 驅動 + SDD 狀態機 + Agent 調度</p>
+    </div>
+    <div class="card" style="padding:20px;grid-column:1/3;">
+      <h3 style="font-size:22px;">Prospec SDD 工具鏈（11 個 skill）</h3>
+      <p class="small-text" style="margin-top:6px;">自動化 story &rarr; plan &rarr; tasks &rarr; implement &rarr; verify</p>
+    </div>
+  </div>
+  <div class="page-num">27 / 28</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 28: 結語 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack" id="s28">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#A7F3D0;">Takeaway</span>
+  <p class="big-quote" style="color:#ECFDF5;font-size:52px;">
+    AI 不會替你做策略，<br>它替你做<span class="highlight">執行</span>。
+  </p>
+  <p class="subtitle" style="margin-top:16px;max-width:800px;">
+    準備好了，一行指令就夠了。
+  </p>
+  <div style="margin-top:36px;">
+    <h3 style="color:#A7F3D0;font-size:36px;">Q & A</h3>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">28 / 28</div>
+</div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-hint">&#x2190; &#x2192; 方向鍵導覽 &middot; F 全螢幕</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function showSlide(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    showSlide(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    showSlide(current - 1);
+  } else if (e.key === 'Home') {
+    showSlide(0);
+  } else if (e.key === 'End') {
+    showSlide(total - 1);
+  } else if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    diff > 0 ? showSlide(current + 1) : showSlide(current - 1);
+  }
+});
+
+// Click to advance
+document.addEventListener('click', (e) => {
+  if (e.clientX > window.innerWidth / 2) {
+    showSlide(current + 1);
+  } else {
+    showSlide(current - 1);
+  }
+});
+</script>
+
+</body>
+</html>

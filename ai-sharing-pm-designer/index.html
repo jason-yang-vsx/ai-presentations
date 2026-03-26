@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 時代的產品開發：從想法到上線 — PM & Designer 的 AI 實戰工作流</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #059669;
+    --primary-light: #10B981;
+    --primary-dark: #047857;
+    --accent: #FBBF24;
+    --bg: #ECFDF5;
+    --bg-white: #FFFFFF;
+    --bg-card: #F0FDF4;
+    --text: #064E3B;
+    --text-muted: #065F46;
+    --text-light: #6EE7B7;
+    --border: #A7F3D0;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    --success: #10B981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Open Sans', sans-serif;
+    background: #0F172A;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+    padding: 60px 100px;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; }
+
+  /* Slide Backgrounds */
+  .bg-gradient {
+    background: linear-gradient(135deg, #064E3B 0%, #047857 40%, #059669 100%);
+    color: #ECFDF5;
+  }
+  .bg-white {
+    background: #FFFFFF;
+    color: var(--text);
+  }
+  .bg-light {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .bg-dark {
+    background: linear-gradient(135deg, #022c22 0%, #064E3B 100%);
+    color: #ECFDF5;
+  }
+  .bg-accent {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+    color: #ECFDF5;
+  }
+
+  /* Typography */
+  h1, h2, h3 { font-family: 'Poppins', 'Noto Sans TC', sans-serif; }
+  h1 { font-size: 96px; font-weight: 800; line-height: 1.05; letter-spacing: -2px; }
+  h2 { font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
+  h3 { font-size: 42px; font-weight: 600; line-height: 1.15; }
+  .subtitle { font-size: 36px; font-weight: 300; line-height: 1.3; opacity: 0.85; }
+  .body-text { font-size: 28px; line-height: 1.5; }
+  .small-text { font-size: 24px; line-height: 1.4; }
+  .label { font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; }
+  .meta { font-size: 28px; opacity: 0.7; }
+
+  /* Layout helpers */
+  .center-stack {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 24px;
+  }
+  .left-stack {
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    width: 100%;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    width: 100%;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(5,150,105,0.08);
+  }
+  .card-dark {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08));
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 28px; margin-bottom: 12px; color: var(--primary); }
+  .card-dark h3 { color: var(--accent); font-size: 28px; margin-bottom: 12px; }
+
+  /* Tags & Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+  .badge-yellow { background: #FEF3C7; color: #92400E; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-dark { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+  .badge-purple { background: #EDE9FE; color: #5B21B6; }
+  .badge-orange { background: #FED7AA; color: #9A3412; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 22px;
+  }
+  table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table tr:nth-child(even) { background: var(--bg-card); }
+  table th:first-child { border-radius: 10px 0 0 0; }
+  table th:last-child { border-radius: 0 10px 0 0; }
+
+  .table-dark { width: 100%; }
+  .table-dark th { background: rgba(16,185,129,0.3); color: #ECFDF5; }
+  .table-dark td { border-bottom: 1px solid rgba(255,255,255,0.1); color: #D1FAE5; }
+  .table-dark tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+
+  .table-compact { font-size: 18px; }
+  .table-compact th { padding: 8px 12px; font-size: 16px; }
+  .table-compact td { padding: 6px 12px; }
+
+  .table-small { font-size: 16px; }
+  .table-small th { padding: 6px 10px; font-size: 14px; }
+  .table-small td { padding: 5px 10px; }
+
+  /* List */
+  ul { list-style: none; padding: 0; }
+  ul li {
+    font-size: 26px;
+    padding: 8px 0;
+    padding-left: 32px;
+    position: relative;
+    line-height: 1.4;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-light);
+    border-radius: 50%;
+  }
+  .bg-gradient ul li::before,
+  .bg-dark ul li::before,
+  .bg-accent ul li::before { background: var(--accent); }
+
+  /* KPI */
+  .kpi { text-align: center; }
+  .kpi-number {
+    font-family: 'Poppins', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 24px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .bg-gradient .kpi-number,
+  .bg-dark .kpi-number { color: var(--accent); }
+  .bg-gradient .kpi-label,
+  .bg-dark .kpi-label { color: #A7F3D0; }
+
+  /* Code block */
+  .code-block {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 18px;
+    color: #E2E8F0;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .comment { color: #64748B; }
+  .code-block .keyword { color: #38BDF8; }
+  .code-block .string { color: #6EE7B7; }
+  .code-block .number { color: #FBBF24; }
+
+  /* Big command */
+  .big-command {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,0,0,0.3);
+    padding: 24px 48px;
+    border-radius: 16px;
+    border: 2px solid rgba(251,191,36,0.3);
+    text-align: center;
+    letter-spacing: -1px;
+  }
+
+  /* Diagram */
+  .diagram-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .diagram-arrow {
+    font-size: 28px;
+    color: var(--primary-light);
+    margin: 0 10px;
+  }
+  .bg-dark .diagram-arrow,
+  .bg-gradient .diagram-arrow { color: var(--accent); }
+
+  /* Progress */
+  .progress-bar {
+    height: 10px;
+    background: var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 5px;
+  }
+
+  /* Decorative elements */
+  .corner-decor {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .corner-decor.top-right {
+    top: -100px; right: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+  .corner-decor.bottom-left {
+    bottom: -100px; left: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+
+  /* Page number */
+  .page-num {
+    position: absolute;
+    bottom: 30px;
+    right: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.4;
+  }
+
+  /* Section title bar */
+  .section-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--accent));
+  }
+
+  /* Slide title area */
+  .slide-header {
+    margin-bottom: 24px;
+    width: 100%;
+  }
+  .slide-header h2 { font-size: 46px; margin-bottom: 4px; }
+  .slide-header .label { margin-bottom: 8px; display: block; }
+
+  /* Highlight */
+  .highlight { color: var(--accent); }
+  .highlight-green { color: var(--primary-light); }
+  .highlight-red { color: var(--danger); }
+
+  /* Navigation */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+
+  /* Image slide */
+  .img-container {
+    width: 100%;
+    max-height: 55vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.1);
+    border: 2px dashed rgba(255,255,255,0.15);
+    min-height: 300px;
+  }
+  .img-container img {
+    max-width: 100%;
+    max-height: 55vh;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    object-fit: contain;
+  }
+  .img-container .placeholder {
+    color: rgba(255,255,255,0.3);
+    font-size: 20px;
+    font-family: 'Poppins', sans-serif;
+  }
+  .bg-white .img-container,
+  .bg-light .img-container {
+    background: rgba(0,0,0,0.03);
+    border-color: var(--border);
+  }
+  .bg-white .img-container .placeholder,
+  .bg-light .img-container .placeholder {
+    color: rgba(0,0,0,0.2);
+  }
+
+  .slide img {
+    max-width: 80%;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+
+  /* Flow diagram */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .flow-arrow-down {
+    font-size: 28px;
+    color: var(--primary-light);
+  }
+  .bg-dark .flow-arrow-down,
+  .bg-gradient .flow-arrow-down { color: var(--accent); }
+
+  .status-icon { font-size: 24px; margin-right: 6px; }
+  .check { color: #10B981; }
+  .cross { color: #EF4444; }
+  .warn { color: #F59E0B; }
+
+  /* Timeline */
+  .timeline-phase {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .phase-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px;
+    font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+  }
+
+  /* Big quote */
+  .big-quote {
+    font-size: 48px;
+    font-weight: 700;
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    line-height: 1.3;
+    max-width: 1000px;
+    text-align: center;
+  }
+
+  /* Step numbered list */
+  .step-list { counter-reset: step; }
+  .step-list .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 10px 0;
+    font-size: 24px;
+    line-height: 1.4;
+  }
+  .step-list .step-item::before { display: none; }
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px;
+    font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+  }
+  .bg-dark .step-num,
+  .bg-gradient .step-num { background: var(--accent); color: #064E3B; }
+
+  /* Verify list */
+  .verify-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    font-size: 24px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .verify-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--success);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Week block */
+  .week-block {
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .week-block h3 { font-size: 24px; color: var(--accent); margin-bottom: 10px; }
+  .week-block p { font-size: 20px; color: #D1FAE5; line-height: 1.5; }
+  .week-block .code-inline {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 18px;
+    color: var(--accent);
+  }
+
+  /* Responsive */
+  @media (max-width: 1400px) {
+    .slide { padding: 50px 70px; }
+    h1 { font-size: 72px; }
+    h2 { font-size: 52px; }
+    h3 { font-size: 34px; }
+    .slide-header h2 { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ============================================ -->
+<!-- SLIDE 1: 封面 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack active" id="s1">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#A7F3D0;">AI-Powered Product Development</span>
+  <h1 style="max-width:1200px;font-size:76px;">AI 時代的產品開發<br>從想法到上線</h1>
+  <p class="subtitle" style="max-width:900px;margin-top:12px;">
+    PM &amp; Designer 的 AI 實戰工作流
+  </p>
+  <div style="margin-top:24px;">
+    <span class="meta">Jason Yang</span>
+    <span class="meta" style="margin:0 16px;">|</span>
+    <span class="meta">2026.03.26</span>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">1 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 2: 今天聊什麼 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s2">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">AGENDA</span>
+    <h2>今天聊什麼</h2>
+  </div>
+  <div class="three-col" style="margin-top: 12px;">
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F9E0;</h3>
+      <h3>AI 時代角色變化</h3>
+      <p class="small-text" style="color:var(--text-muted);">PM &amp; Designer 的價值重新定義</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F527;</h3>
+      <h3>實戰案例 Clipwise</h3>
+      <p class="small-text" style="color:var(--text-muted);">SDD 開發旅程完整回顧</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F3A8;</h3>
+      <h3>Prototype 生成</h3>
+      <p class="small-text" style="color:var(--text-muted);">20 種風格 &times; 9 頁面 = 180 方案</p>
+    </div>
+  </div>
+  <div class="three-col" style="margin-top: 16px;">
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F4D0;</h3>
+      <h3>Prospec 精準落地</h3>
+      <p class="small-text" style="color:var(--text-muted);">節點映射系統讓設計不走樣</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F525;</h3>
+      <h3>Figma MCP 寫入</h3>
+      <p class="small-text" style="color:var(--text-muted);">3/24 剛開放！工作流大升級</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:36px; margin-bottom:8px;">&#x1F680;</h3>
+      <h3>Claude Code 入門</h3>
+      <p class="small-text" style="color:var(--text-muted);">PM &amp; Designer 怎麼上手</p>
+    </div>
+  </div>
+  <div class="page-num">2 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 3: PM 在 AI 時代的處境 -->
+<!-- ============================================ -->
+<div class="slide bg-dark left-stack" id="s3">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#6EE7B7;">AI 時代角色變化</span>
+    <h2 style="color:#ECFDF5;">執行變快了，但判斷力沒變</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <ul>
+        <li>以前寫一份 PRD 要幾天，現在一個下午就能從想法變成 prototype</li>
+        <li>「該問什麼問題」「該解決什麼問題」— 這些判斷力沒被 AI 取代</li>
+        <li>反而因為執行變快了，<span class="highlight">判斷力變得更值錢</span></li>
+        <li>工程師面對一樣的處境：AI 寫 code 越來越快，但「該寫什麼」不會被取代</li>
+      </ul>
+    </div>
+    <div class="card-dark" style="display:flex;flex-direction:column;justify-content:center;padding:36px;">
+      <p class="big-quote" style="font-size:32px;color:#ECFDF5;text-align:left;">
+        AI 是加速器，<br>不是替代者。<br><br>
+        <span class="highlight">PM 和設計師的價值<br>在「定義」而非「執行」</span>
+      </p>
+      <p class="small-text" style="color:#6EE7B7;margin-top:20px;font-size:18px;">
+        — Claude 官方 blog "Product Management on the AI Exponential"
+      </p>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">3 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 4: 什麼是 SDD -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s4">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">METHODOLOGY</span>
+    <h2>什麼是 SDD？</h2>
+    <p class="body-text" style="color:var(--text-muted);">Spec-Driven Development — 規格驅動開發</p>
+  </div>
+  <div class="two-col" style="align-items:stretch;">
+    <div>
+      <div class="card" style="margin-bottom:20px;border-left:4px solid var(--danger);">
+        <h3 style="color:var(--danger);">傳統開發</h3>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          <div style="flex:1;">
+            <div class="progress-bar"><div class="progress-fill" style="width:20%;background:var(--danger);"></div></div>
+            <p class="small-text" style="margin-top:4px;">20% 需求討論</p>
+          </div>
+          <div style="flex:4;">
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--danger);"></div></div>
+            <p class="small-text" style="margin-top:4px;">80% 寫 code + 改 bug + 再改 bug</p>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--success);">
+        <h3 style="color:var(--success);">SDD 開發</h3>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          <div style="flex:4;">
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
+            <p class="small-text" style="margin-top:4px;">80% 準備（規格 + 計畫 + 拆解）</p>
+          </div>
+          <div style="flex:1;">
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
+            <p class="small-text" style="margin-top:4px;">20% AI 寫 code</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="body-text" style="font-weight:600;margin-bottom:12px;">六步流程</p>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><span>Constitution（定規矩）</span></div>
+        <div class="step-item"><div class="step-num">2</div><span>Specify（寫規格 / PRD）</span></div>
+        <div class="step-item"><div class="step-num">3</div><span>Clarify（抓漏）</span></div>
+        <div class="step-item"><div class="step-num">4</div><span>Plan（技術藍圖）</span></div>
+        <div class="step-item"><div class="step-num">5</div><span>Tasks（拆任務）</span></div>
+        <div class="step-item"><div class="step-num">6</div><span>Implement（AI 照清單打勾）</span></div>
+      </div>
+      <div class="card-accent" style="margin-top:16px;padding:16px 20px;">
+        <p class="small-text" style="font-weight:600;">前 5 步 PM &amp; Designer 都能參與，<br>只有最後一步需要寫 code</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">4 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: 實戰案例 Clipwise -->
+<!-- ============================================ -->
+<div class="slide bg-gradient left-stack" id="s5">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.08;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#A7F3D0;">CASE STUDY</span>
+    <h2 style="color:#ECFDF5;">Clipwise — AI 智慧書籤管理工具</h2>
+  </div>
+  <div class="two-col">
+    <div>
+      <ul>
+        <li>貼上 URL &rarr; AI 自動摘要 + 自動標籤</li>
+        <li>全文搜尋、Cmd+K 快速搜尋</li>
+        <li>深色模式、響應式設計</li>
+      </ul>
+      <div class="img-container" style="margin-top:24px;max-height:35vh;min-height:200px;">
+        <img src="img/clipwise-dashboard.png" alt="Clipwise Dashboard"
+             onerror="this.style.display='none';this.parentElement.querySelector('.placeholder').style.display='block';">
+        <span class="placeholder" style="display:none;">Clipwise Dashboard 截圖</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px;">
+      <p class="body-text" style="font-weight:600;color:#ECFDF5;">開發數據</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="kpi">
+          <div class="kpi-number">119</div>
+          <div class="kpi-label">個任務</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-number">94%</div>
+          <div class="kpi-label">完成率</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-number">73</div>
+          <div class="kpi-label">自動生成檔案</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-number">176</div>
+          <div class="kpi-label">測試案例</div>
+        </div>
+      </div>
+      <div class="card-dark" style="padding:16px 20px;text-align:center;">
+        <p class="small-text" style="color:#D1FAE5;"><span class="highlight">10</span> 個 User Stories</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">5 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: Step 1 — 從想法到規格 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s6">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">STEP 1</span>
+    <h2>從想法到規格</h2>
+    <p class="body-text" style="color:var(--text-muted);">PM 的主場：定義「做什麼」和「為什麼做」</p>
+  </div>
+  <div class="flow-col" style="width:100%;gap:16px;">
+    <div class="flow-row" style="width:100%;justify-content:flex-start;">
+      <div class="diagram-box" style="background:var(--primary);color:white;">一句話：「我想做一個<br>AI 書籤管理工具」</div>
+    </div>
+    <div class="flow-arrow-down" style="text-align:left;padding-left:80px;">&darr;</div>
+    <div class="card" style="width:100%;">
+      <h3 style="font-size:22px;">/prospec-explore（AI 陪你釐清需求）</h3>
+      <div class="three-col" style="margin-top:10px;gap:16px;">
+        <div class="card-accent" style="padding:14px;">
+          <p class="small-text" style="font-weight:600;">問題空間</p>
+          <p style="font-size:18px;color:var(--text-muted);">解決什麼痛點？</p>
+        </div>
+        <div class="card-accent" style="padding:14px;">
+          <p class="small-text" style="font-weight:600;">解決方案</p>
+          <p style="font-size:18px;color:var(--text-muted);">有哪些做法？取捨？</p>
+        </div>
+        <div class="card-accent" style="padding:14px;">
+          <p class="small-text" style="font-weight:600;">影響範圍</p>
+          <p style="font-size:18px;color:var(--text-muted);">技術複雜度評估</p>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow-down">&darr;</div>
+    <div class="card" style="width:100%;">
+      <h3 style="font-size:22px;">/prospec-new-story（建立 User Story）</h3>
+      <div class="code-block" style="font-size:16px;margin-top:8px;">As a 用戶
+I want 貼上 URL 就能保存書籤
+So that 我可以快速收藏連結
+
+驗收標準：
+<span class="check">&#10003;</span> 3 秒內顯示保存成功
+<span class="check">&#10003;</span> 自動抓取 og:image、title
+<span class="check">&#10003;</span> 無效 URL 顯示友善錯誤</div>
+    </div>
+    <div class="flow-arrow-down">&darr;</div>
+    <div class="diagram-box" style="background:var(--success);color:white;">完整規格文件（382 行 spec.md）</div>
+  </div>
+  <div style="position:absolute;bottom:80px;right:100px;">
+    <div class="card-accent" style="padding:14px 20px;">
+      <p class="small-text"><strong>PM 花的時間：約 30 分鐘的對話</strong></p>
+    </div>
+  </div>
+  <div class="page-num">6 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 7: Step 2 — 從規格到 Prototype -->
+<!-- ============================================ -->
+<div class="slide bg-dark left-stack" id="s7">
+  <div class="slide-header">
+    <span class="label" style="color:#6EE7B7;">STEP 2</span>
+    <h2 style="color:#ECFDF5;">從規格到 Prototype</h2>
+    <p class="subtitle" style="font-size:28px;">設計師的主場：把規格變成看得見的東西</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card-dark" style="margin-bottom:16px;padding:20px;text-align:center;">
+        <p class="body-text" style="color:#ECFDF5;">9 個設計規格 &times; 20 種風格</p>
+        <p class="kpi-number" style="font-size:64px;margin-top:8px;">= 180</p>
+        <p class="kpi-label">個 HTML Prototype</p>
+      </div>
+      <table class="table-dark table-compact" style="font-size:16px;">
+        <thead>
+          <tr><th>頁面</th><th>描述</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Landing Page</td><td>未登入首頁</td></tr>
+          <tr><td>Auth</td><td>登入 / 註冊</td></tr>
+          <tr><td>Dashboard</td><td>統計 + 最近書籤</td></tr>
+          <tr><td>Bookmarks</td><td>書籤列表</td></tr>
+          <tr><td>Bookmark Detail</td><td>書籤詳情彈窗</td></tr>
+          <tr><td>Add Bookmark</td><td>新增書籤流程</td></tr>
+          <tr><td>Command Palette</td><td>Cmd+K 搜尋</td></tr>
+          <tr><td>Settings</td><td>設定頁面</td></tr>
+          <tr><td>States</td><td>空狀態、載入狀態</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p class="body-text" style="color:#ECFDF5;font-weight:600;margin-bottom:12px;">20 種視覺風格</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span class="badge badge-dark">Glassmorphism</span>
+        <span class="badge badge-dark">Minimalism</span>
+        <span class="badge badge-dark">Bento Grid</span>
+        <span class="badge badge-dark">Cyberpunk</span>
+        <span class="badge badge-dark">Neumorphism</span>
+        <span class="badge badge-dark">Brutalism</span>
+        <span class="badge badge-dark">Retro Pixel</span>
+        <span class="badge badge-dark">Organic</span>
+        <span class="badge badge-dark">Editorial</span>
+        <span class="badge badge-dark">Vaporwave</span>
+        <span class="badge badge-dark">Nordic</span>
+        <span class="badge badge-dark">Material 3</span>
+        <span class="badge badge-dark">Flat Design</span>
+        <span class="badge badge-dark">Isometric</span>
+        <span class="badge badge-dark">Gradient</span>
+        <span class="badge badge-dark">Dark Mode</span>
+        <span class="badge badge-dark">Pastel</span>
+        <span class="badge badge-dark">Monochrome</span>
+        <span class="badge badge-dark">Art Deco</span>
+        <span class="badge badge-dark">Geometric</span>
+      </div>
+      <div class="card-dark" style="margin-top:24px;padding:20px;">
+        <p class="small-text" style="color:#D1FAE5;"><strong>耗時：</strong>4-8 小時（自動化 Ralph Loop 生成）</p>
+        <p class="small-text" style="color:#D1FAE5;margin-top:8px;"><strong>效果：</strong>設計師 / PM 快速瀏覽 &rarr; 挑選最佳風格 &rarr; 降低設計決策風險</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">7 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 8: Prototype Gallery 展示 -->
+<!-- ============================================ -->
+<div class="slide bg-dark" id="s8" style="padding:40px 60px;">
+  <div style="display:flex;gap:32px;height:100%;align-items:stretch;">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <div class="img-container" style="flex:1;max-height:80vh;">
+        <img src="img/prototype-gallery.png" alt="Prototype Gallery"
+             style="max-height:80vh;width:100%;object-fit:contain;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.4);"
+             onerror="this.style.display='none';">
+      </div>
+    </div>
+    <div style="width:320px;display:flex;flex-direction:column;justify-content:center;gap:16px;">
+      <span class="label" style="color:#6EE7B7;">DEMO</span>
+      <h3 style="color:#ECFDF5;font-size:32px;">Prototype Gallery</h3>
+      <p style="font-size:18px;color:#A7F3D0;">同一份規格<br>多種設計方案<br>快速決策</p>
+      <div style="margin-top:8px;">
+        <img src="img/prototype-index.png" alt="20 種風格總覽"
+             style="width:100%;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);opacity:0.9;"
+             onerror="this.style.display='none';">
+      </div>
+      <p style="font-size:14px;color:#6EE7B7;margin-top:4px;">20 種風格 &times; 9 頁面 = 180 個方案</p>
+    </div>
+  </div>
+  <div class="page-num" style="color:rgba(255,255,255,0.5);">8 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 9: SDD 工具的演進 -->
+<!-- ============================================ -->
+<div class="slide bg-light center-stack" id="s9">
+  <div class="section-bar"></div>
+  <span class="label">EVOLUTION</span>
+  <h2 style="margin-bottom:4px;">SDD 工具的演進 — 三個階段</h2>
+  <div class="img-container" style="flex:1;max-height:58vh;min-height:250px;">
+    <img src="img/sdd-workflow.png" alt="SDD 工作流程圖"
+         style="max-height:58vh;width:auto;border-radius:20px;box-shadow:0 12px 48px rgba(5,150,105,0.15);"
+         onerror="this.style.display='none';">
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+    <span class="badge badge-blue" style="font-size:16px;padding:8px 18px;">Spec-Kit — 0&rarr;1 全新專案</span>
+    <span class="badge badge-yellow" style="font-size:16px;padding:8px 18px;">OpenSpec — Brownfield 變更管理</span>
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">Prospec — AI Knowledge + Design 整合 ★</span>
+  </div>
+  <div class="page-num">9 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 10: 三代工具差異比較 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s10">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">COMPARISON</span>
+    <h2>三代工具差異比較</h2>
+  </div>
+  <div style="width:100%;overflow-x:auto;">
+    <table class="table-compact">
+      <thead>
+        <tr>
+          <th>面向</th>
+          <th style="min-width:160px;">Spec-Kit</th>
+          <th style="min-width:160px;">OpenSpec</th>
+          <th style="min-width:200px;">Prospec</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>適用場景</strong></td>
+          <td>0&rarr;1 全新專案</td>
+          <td>既有專案改造</td>
+          <td><span class="badge badge-green" style="font-size:14px;">全場景（0&rarr;1 + Brownfield）</span></td>
+        </tr>
+        <tr>
+          <td><strong>規格方式</strong></td>
+          <td>全量重寫</td>
+          <td>Delta Spec（只寫差異）</td>
+          <td>Delta Spec + 漸進累積</td>
+        </tr>
+        <tr>
+          <td><strong>AI 知識庫</strong></td>
+          <td><span class="cross">&#10007;</span> 無</td>
+          <td><span class="cross">&#10007;</span> 無</td>
+          <td><span class="check">&#10003;</span> 三層架構（L0/L1/L2）</td>
+        </tr>
+        <tr>
+          <td><strong>設計整合</strong></td>
+          <td><span class="cross">&#10007;</span> 無</td>
+          <td><span class="cross">&#10007;</span> 無</td>
+          <td><span class="check">&#10003;</span> design-spec + interaction-spec</td>
+        </tr>
+        <tr>
+          <td><strong>設計工具</strong></td>
+          <td><span class="cross">&#10007;</span></td>
+          <td><span class="cross">&#10007;</span></td>
+          <td><span class="check">&#10003;</span> Figma / Pencil / Penpot / HTML</td>
+        </tr>
+        <tr>
+          <td><strong>Token 效率</strong></td>
+          <td>一次全載入</td>
+          <td>較省</td>
+          <td><span class="badge badge-green" style="font-size:14px;">節省 70-80%</span></td>
+        </tr>
+        <tr>
+          <td><strong>品質驗證</strong></td>
+          <td>手動</td>
+          <td>三維度靜態檢查</td>
+          <td>5+1 維度 + MCP 截圖比對</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="img-container" style="margin-top:12px;max-height:32vh;min-height:120px;">
+    <img src="img/spec-kit-vs-openspec-vs-prospec.png" alt="三代工具比較"
+         style="max-height:32vh;border-radius:16px;box-shadow:0 8px 32px rgba(5,150,105,0.12);"
+         onerror="this.style.display='none';">
+  </div>
+  <div class="page-num">10 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 11: Prospec 兩大殺手級功能 -->
+<!-- ============================================ -->
+<div class="slide bg-dark center-stack" id="s11">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#6EE7B7;">KILLER FEATURES</span>
+  <h2 style="color:#ECFDF5;margin-bottom:4px;">Prospec 的兩大殺手級功能</h2>
+  <div class="img-container" style="flex:1;max-height:58vh;min-height:250px;">
+    <img src="img/prospec-killer-features.png" alt="Prospec 殺手功能"
+         style="max-height:58vh;width:auto;border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.3);"
+         onerror="this.style.display='none';">
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+    <span class="badge badge-yellow" style="font-size:16px;padding:8px 18px;">AI Knowledge — L0/L1/L2 三層自動知識庫</span>
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">Design 整合 — design-spec + interaction-spec + MCP</span>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">11 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 12: Step 3 — 從 Design 到精準開發 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s12">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">STEP 3</span>
+    <h2>從 Design 到精準開發</h2>
+    <p class="body-text" style="color:var(--text-muted);">痛點：設計稿和實作總是有落差</p>
+  </div>
+  <div class="two-col" style="align-items:stretch;">
+    <div>
+      <div class="card" style="border-left:4px solid var(--danger);margin-bottom:16px;">
+        <h3 style="color:var(--danger);font-size:22px;">傳統流程的問題</h3>
+        <ul style="margin-top:8px;">
+          <li style="font-size:20px;">設計師：「按照設計稿」</li>
+          <li style="font-size:20px;">工程師：「我覺得差不多」</li>
+          <li style="font-size:20px;"><span class="highlight-red">結果：顏色偏了、間距不對、狀態漏了</span></li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:4px solid var(--success);">
+        <h3 style="color:var(--success);font-size:22px;">Prospec 的解法：節點式設計映射</h3>
+        <p class="small-text" style="margin-top:8px;color:var(--text-muted);">每個設計節點都有對應的任務 &rarr; AI 照著做，不會猜測</p>
+      </div>
+    </div>
+    <div>
+      <div class="code-block" style="font-size:15px;line-height:1.7;">
+<span class="comment">// UI 設計節點 &rarr; 任務標記</span>
+
+<span class="keyword">Button</span> (Primary CTA)    &rarr;  <span class="string">REQ-UI-001</span>
+  ├─ default 狀態          ├─ 實作基礎按鈕
+  ├─ hover 狀態            ├─ 加上 hover 效果
+  ├─ loading 狀態          ├─ 加上載入動畫
+  └─ disabled 狀態         └─ 加上禁用樣式
+
+<span class="keyword">Modal</span> (Gift Form)       &rarr;  <span class="string">REQ-UI-002</span>
+  ├─ 開啟動畫              ├─ overlay + z-index
+  ├─ 表單驗證              ├─ email 格式 + 必填
+  └─ 響應式                └─ mobile 全寬 / desktop 600px</div>
+    </div>
+  </div>
+  <div class="page-num">12 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 13: Prospec 三層精準機制 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient left-stack" id="s13">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.08;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#A7F3D0;">PRECISION</span>
+    <h2 style="color:#ECFDF5;">Prospec 三層精準機制</h2>
+  </div>
+  <div class="three-col" style="align-items:stretch;">
+    <div class="card-dark">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div class="step-num" style="margin:0 auto;width:48px;height:48px;font-size:24px;">1</div>
+      </div>
+      <h3 style="text-align:center;">設計規格</h3>
+      <p class="small-text" style="color:#A7F3D0;text-align:center;margin-bottom:8px;">design-spec.md</p>
+      <ul>
+        <li style="font-size:20px;color:#D1FAE5;">設計令牌：顏色、字體、間距的精確值</li>
+        <li style="font-size:20px;color:#D1FAE5;">元件結構：每個元件的 props 和 states</li>
+      </ul>
+    </div>
+    <div class="card-dark">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div class="step-num" style="margin:0 auto;width:48px;height:48px;font-size:24px;">2</div>
+      </div>
+      <h3 style="text-align:center;">互動規格</h3>
+      <p class="small-text" style="color:#A7F3D0;text-align:center;margin-bottom:8px;">interaction-spec.md</p>
+      <ul>
+        <li style="font-size:20px;color:#D1FAE5;">頁面流程：A &rarr; B &rarr; C 的狀態轉換</li>
+        <li style="font-size:20px;color:#D1FAE5;">手勢操作：點擊、滑動、長按</li>
+      </ul>
+    </div>
+    <div class="card-dark">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div class="step-num" style="margin:0 auto;width:48px;height:48px;font-size:24px;">3</div>
+      </div>
+      <h3 style="text-align:center;">Delta Spec</h3>
+      <p class="small-text" style="color:#A7F3D0;text-align:center;margin-bottom:8px;">變更追蹤</p>
+      <ul>
+        <li style="font-size:20px;color:#D1FAE5;"><span class="check">ADDED</span>：新增了什麼設計</li>
+        <li style="font-size:20px;color:#D1FAE5;"><span class="warn">MODIFIED</span>：改了什麼（Before / After）</li>
+        <li style="font-size:20px;color:#D1FAE5;"><span class="highlight-red">REMOVED</span>：移除了什麼（附原因）</li>
+      </ul>
+    </div>
+  </div>
+  <div class="flow-row" style="margin-top:32px;">
+    <div class="diagram-box" style="background:rgba(255,255,255,0.15);color:#ECFDF5;">設計令牌<br><span style="font-size:14px;">（精確值）</span></div>
+    <span class="diagram-arrow">&rarr;</span>
+    <div class="diagram-box" style="background:rgba(255,255,255,0.15);color:#ECFDF5;">Delta Spec<br><span style="font-size:14px;">（追蹤變更）</span></div>
+    <span class="diagram-arrow">&rarr;</span>
+    <div class="diagram-box" style="background:rgba(255,255,255,0.15);color:#ECFDF5;">任務清單<br><span style="font-size:14px;">（打勾）</span></div>
+    <span class="diagram-arrow">&rarr;</span>
+    <div class="diagram-box" style="background:var(--accent);color:#064E3B;">AI 精準實作<br><span style="font-size:14px;">（不猜測）</span></div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">13 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 14: 工作流進化 — 之前 vs 現在 -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s14">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">WORKFLOW EVOLUTION</span>
+    <h2>工作流進化 — 之前 vs 現在</h2>
+  </div>
+  <div class="two-col" style="align-items:stretch;">
+    <div class="card" style="border-top:4px solid var(--danger);">
+      <h3 style="color:var(--danger);font-size:22px;">之前的做法（html.to.design 時代）</h3>
+      <div style="margin-top:12px;">
+        <div class="flow-col">
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">User Story</div>
+          <div class="flow-arrow-down" style="color:var(--danger);">&darr;</div>
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">Prototype（HTML）</div>
+          <div class="flow-arrow-down" style="color:var(--danger);">&darr;</div>
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">html.to.design 匯入 Figma<br><span style="font-size:13px;opacity:0.7;">格式常跑掉</span></div>
+          <div class="flow-arrow-down" style="color:var(--danger);">&darr;</div>
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">手動在 Figma 調整<br><span style="font-size:13px;opacity:0.7;">設計師要花時間修</span></div>
+          <div class="flow-arrow-down" style="color:var(--danger);">&darr;</div>
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">產出 Design Mapping 表</div>
+          <div class="flow-arrow-down" style="color:var(--danger);">&darr;</div>
+          <div class="diagram-box" style="background:#FEE2E2;color:#991B1B;width:100%;font-size:16px;">Tasks + Implement</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--success);">
+      <h3 style="color:var(--success);font-size:22px;">現在的做法（Figma MCP 寫入 3/24 開放）</h3>
+      <div style="margin-top:12px;">
+        <div class="flow-col">
+          <div class="diagram-box" style="background:#D1FAE5;color:#065F46;width:100%;font-size:16px;">User Story</div>
+          <div class="flow-arrow-down">&darr;</div>
+          <div class="diagram-box" style="background:#D1FAE5;color:#065F46;width:100%;font-size:16px;">Prototype（HTML）</div>
+          <div class="flow-arrow-down">&darr;</div>
+          <div class="diagram-box" style="background:var(--success);color:white;width:100%;font-size:16px;">Figma MCP 直接寫入 Canvas<br><span style="font-size:13px;opacity:0.85;">原生整合，不需要第三方工具</span></div>
+          <div class="flow-arrow-down">&darr;</div>
+          <div class="diagram-box" style="background:#D1FAE5;color:#065F46;width:100%;font-size:16px;">Design Mapping 自動產生<br><span style="font-size:13px;opacity:0.7;">Node ID 直接取得</span></div>
+          <div class="flow-arrow-down">&darr;</div>
+          <div class="diagram-box" style="background:#D1FAE5;color:#065F46;width:100%;font-size:16px;">Tasks + Implement<br><span style="font-size:13px;opacity:0.7;">AI 從 Figma MCP 讀取精確值實作</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="img-container" style="margin-top:12px;max-height:25vh;min-height:0;border:none;background:none;">
+    <img src="img/figma-mcp-write.png" alt="工作流前後對比" style="max-height:25vh;"
+         onerror="this.style.display='none';">
+  </div>
+  <div class="page-num">14 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 15: Figma MCP 新功能亮點 -->
+<!-- ============================================ -->
+<div class="slide bg-dark center-stack" id="s15">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#6EE7B7;">FIGMA MCP · 3/24 剛開放</span>
+  <h2 style="color:#ECFDF5;margin-bottom:4px;">Figma MCP 新功能亮點</h2>
+  <div class="img-container" style="flex:1;max-height:55vh;min-height:250px;">
+    <img src="img/figma-mcp-write.png" alt="Figma MCP 寫入功能"
+         style="max-height:55vh;width:auto;border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.3);"
+         onerror="this.style.display='none';">
+  </div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+    <span class="badge badge-yellow" style="font-size:15px;padding:8px 16px;">use_figma — 建立/編輯/刪除任何物件</span>
+    <span class="badge badge-yellow" style="font-size:15px;padding:8px 16px;">generate_figma_design — HTML → Figma</span>
+    <span class="badge badge-green" style="font-size:15px;padding:8px 16px;">get_variable_defs — 取得設計系統變數</span>
+    <span class="badge badge-green" style="font-size:15px;padding:8px 16px;">get_code_connect_map — 節點 ↔ 程式碼</span>
+  </div>
+  <p style="font-size:18px;color:#6EE7B7;margin-top:8px;">Figma = <span class="highlight">Single Source of Truth</span> · 目前 Beta 免費</p>
+  <div class="page-num" style="color:#A7F3D0;">15 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 16: 驗證 — 自動化品質閘門 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s16">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">QUALITY GATE</span>
+    <h2>驗證 — 自動化品質閘門</h2>
+    <p class="body-text" style="color:var(--text-muted);">Prospec Verify：5+1 維度審計</p>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon">1</div>
+        <span class="small-text"><strong>任務完成度</strong> — tasks.md 100% 打勾？</span>
+      </div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon">2</div>
+        <span class="small-text"><strong>規格合規</strong> — delta-spec 每項需求都實作了？</span>
+      </div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon">3</div>
+        <span class="small-text"><strong>Constitution 稽核</strong> — 專案紅線有沒有被違反？</span>
+      </div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon">4</div>
+        <span class="small-text"><strong>規格一致性</strong> — Spec 和 AI Knowledge 描述一致？</span>
+      </div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon">5</div>
+        <span class="small-text"><strong>測試覆蓋</strong> — 有測試嗎？通過嗎？</span>
+      </div>
+      <div class="verify-item" style="background:var(--bg-card);">
+        <div class="verify-icon" style="background:var(--accent);color:#064E3B;">+1</div>
+        <span class="small-text"><strong>設計一致性</strong> — 視覺和互動跟設計稿吻合？</span>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="text-align:center;padding:32px;">
+        <p class="body-text" style="font-weight:600;margin-bottom:16px;">品質評分</p>
+        <div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;">
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--success);color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;font-family:'Poppins',sans-serif;margin:0 auto;">S</div>
+            <p style="font-size:14px;margin-top:4px;color:var(--text-muted);">全部 PASS</p>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--primary-light);color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;font-family:'Poppins',sans-serif;margin:0 auto;">A</div>
+            <p style="font-size:14px;margin-top:4px;color:var(--text-muted);">微小問題</p>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--info);color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;font-family:'Poppins',sans-serif;margin:0 auto;">B</div>
+            <p style="font-size:14px;margin-top:4px;color:var(--text-muted);">需改善</p>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--warning);color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;font-family:'Poppins',sans-serif;margin:0 auto;">C</div>
+            <p style="font-size:14px;margin-top:4px;color:var(--text-muted);">待修正</p>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--danger);color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;font-family:'Poppins',sans-serif;margin:0 auto;">D</div>
+            <p style="font-size:14px;margin-top:4px;color:var(--text-muted);">不能部署</p>
+          </div>
+        </div>
+        <div class="card-accent" style="padding:16px;">
+          <p class="small-text" style="font-weight:600;">PM &amp; Designer 可以直接看報告<br>不用看 code</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">16 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 17: 完整流程回顧 -->
+<!-- ============================================ -->
+<div class="slide bg-accent center-stack" id="s17">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.1;"></div>
+  <div class="slide-header" style="text-align:center;">
+    <span class="label" style="color:rgba(255,255,255,0.6);">FULL FLOW</span>
+    <h2 style="color:#ECFDF5;">完整流程回顧</h2>
+  </div>
+  <div class="four-col" style="align-items:stretch;">
+    <div class="card-dark" style="text-align:center;">
+      <h3 style="font-size:20px;">PM 定義需求</h3>
+      <div style="margin-top:12px;font-size:18px;color:#D1FAE5;line-height:1.8;">
+        想法<br>&darr;<br>探索釐清<br>&darr;<br>10 個 User Story<br>&darr;<br>382 行規格文件
+      </div>
+    </div>
+    <div class="card-dark" style="text-align:center;">
+      <h3 style="font-size:20px;">設計師產出設計</h3>
+      <div style="margin-top:12px;font-size:18px;color:#D1FAE5;line-height:1.8;">
+        9 份設計規格<br>&darr;<br>180 個 Prototype<br>&darr;<br>選定風格<br>&darr;<br>節點映射任務
+      </div>
+    </div>
+    <div class="card-dark" style="text-align:center;">
+      <h3 style="font-size:20px;">開發實作</h3>
+      <div style="margin-top:12px;font-size:18px;color:#D1FAE5;line-height:1.8;">
+        119 個任務<br>&darr;<br>94% 完成率<br>&darr;<br>73 個檔案<br>&darr;<br>176 個測試
+      </div>
+    </div>
+    <div class="card-dark" style="text-align:center;">
+      <h3 style="font-size:20px;">品質驗證</h3>
+      <div style="margin-top:12px;font-size:18px;color:#D1FAE5;line-height:1.8;">
+        5+1 維度審計<br>&darr;<br>品質評分<br>&darr;<br>設計一致性 <span class="check">&#10003;</span><br>&darr;<br>規格合規 <span class="check">&#10003;</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-dark" style="margin-top:28px;padding:20px 40px;text-align:center;width:auto;">
+    <p class="body-text" style="color:#ECFDF5;">
+      從「我想做一個 AI 書籤工具」到可運行系統<br>
+      <span class="highlight">SDD 讓每一步都可追溯</span>
+    </p>
+  </div>
+  <div class="page-num" style="color:rgba(255,255,255,0.5);">17 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 18: Claude Code 是什麼 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s18">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">CLAUDE CODE</span>
+    <h2>Claude Code 是什麼？</h2>
+    <p class="body-text" style="color:var(--text-muted);">不只是 AI 聊天 — 是一個多角色協作系統</p>
+  </div>
+  <div style="width:100%;">
+    <table>
+      <thead>
+        <tr>
+          <th>概念</th>
+          <th>比喻</th>
+          <th>PM / Designer 怎麼用</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Skills</strong></td>
+          <td>工作劇本</td>
+          <td>定義好流程，一個指令跑完整套</td>
+        </tr>
+        <tr>
+          <td><strong>Agents</strong></td>
+          <td>虛擬團隊成員</td>
+          <td>Product Strategist、UI/UX Designer...</td>
+        </tr>
+        <tr>
+          <td><strong>Commands</strong></td>
+          <td>快捷鍵</td>
+          <td>/product-plan、/design.prototype...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two-col" style="margin-top:24px;">
+    <div class="card-accent">
+      <h3 style="font-size:22px;color:var(--primary);">PM 常用 Skills</h3>
+      <div class="code-block" style="font-size:16px;margin-top:8px;background:#064E3B;color:#D1FAE5;">
+/prospec-explore     → AI 陪你釐清需求
+/prospec-new-story   → 自動建立 User Story</div>
+    </div>
+    <div class="card-accent">
+      <h3 style="font-size:22px;color:var(--primary);">Designer 常用 Skills</h3>
+      <div class="code-block" style="font-size:16px;margin-top:8px;background:#064E3B;color:#D1FAE5;">
+/design.prototype    → 規格變 Prototype
+/design.audit        → 檢查設計和規格對齊</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;padding:16px 24px;text-align:center;border:2px solid var(--primary);">
+    <p class="body-text" style="font-weight:600;">你不需要會寫 code — 你需要會<span style="color:var(--primary);">「定義問題」</span>和<span style="color:var(--primary);">「描述想要什麼」</span></p>
+  </div>
+  <div class="page-num">18 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 19: Agent 並行工作 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack" id="s19">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.08;"></div>
+  <span class="label" style="color:#A7F3D0;">PARALLEL AGENTS</span>
+  <h2 style="color:#ECFDF5;margin-bottom:4px;">Agent 並行工作 — 一個人 = 一個團隊</h2>
+  <div class="img-container" style="flex:1;max-height:58vh;min-height:250px;">
+    <img src="img/agent-teams-parallel.png" alt="Agent 並行工作"
+         style="max-height:58vh;width:auto;border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.2);"
+         onerror="this.style.display='none';">
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+    <div class="card-dark" style="text-align:center;padding:12px 24px;">
+      <p style="color:#D1FAE5;font-size:18px;"><span class="highlight-red">傳統：</span>一個人做三件事 → <span class="highlight" style="font-size:28px;">3 天</span></p>
+    </div>
+    <div class="card-dark" style="text-align:center;padding:12px 24px;">
+      <p style="color:#D1FAE5;font-size:18px;"><span class="highlight-green">Agent：</span>三個並行 → <span class="highlight" style="font-size:28px;">30 分鐘</span></p>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">19 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 20: PM & Designer 的上手路徑 -->
+<!-- ============================================ -->
+<div class="slide bg-dark left-stack" id="s20">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#6EE7B7;">GETTING STARTED</span>
+    <h2 style="color:#ECFDF5;">PM &amp; Designer 的上手路徑</h2>
+  </div>
+  <div class="four-col" style="align-items:stretch;">
+    <div class="week-block">
+      <div class="step-num" style="margin-bottom:8px;">1</div>
+      <h3>Week 1：靈感發想</h3>
+      <p>跟 Claude 聊你的產品想法，它會幫你釐清問題、梳理方向</p>
+    </div>
+    <div class="week-block">
+      <div class="step-num" style="margin-bottom:8px;">2</div>
+      <h3>Week 2：產品規劃</h3>
+      <p>用 <span class="code-inline">/prospec-explore</span> 探索需求<br>用 <span class="code-inline">/prospec-new-story</span> 建立 User Story<br>產出結構化的規格文件</p>
+    </div>
+    <div class="week-block">
+      <div class="step-num" style="margin-bottom:8px;">3</div>
+      <h3>Week 3：設計探索</h3>
+      <p>用 <span class="code-inline">/design.prototype</span> 產出多種設計方案<br>用 <span class="code-inline">/design.audit</span> 檢查設計和規格對齊<br>快速挑選最佳設計風格</p>
+    </div>
+    <div class="week-block">
+      <div class="step-num" style="margin-bottom:8px;">4</div>
+      <h3>Week 4：落地開發</h3>
+      <p>設計節點映射到任務<br>AI 照著任務清單實作<br>自動化品質驗證<br>可運行的產品</p>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">20 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 21: PM 推薦資源 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s21">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">FOR PM</span>
+    <h2>PM 推薦資源</h2>
+  </div>
+  <div class="two-col" style="align-items:stretch;">
+    <div>
+      <div class="card" style="border-left:4px solid var(--info);margin-bottom:16px;padding:20px;">
+        <h3 style="color:var(--info);font-size:22px;">ccforpms.com — 免費互動課程</h3>
+        <p class="small-text" style="color:var(--text-muted);margin-top:8px;">12 小時 | 在 Claude Code 裡直接學習</p>
+        <ul style="margin-top:12px;">
+          <li style="font-size:18px;">Module 1：基礎功能 — 平行 Agent、專案記憶</li>
+          <li style="font-size:18px;">Module 2：PRD 撰寫、數據分析、競品研究</li>
+          <li style="font-size:18px;">Module 3：Nano Banana 視覺素材生成</li>
+          <li style="font-size:18px;">Module 4：Vibe Coding — 規劃→建構→上線</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:4px solid var(--warning);padding:20px;">
+        <h3 style="color:var(--warning);font-size:22px;">aitmpl.com — PM 精選 Agent</h3>
+        <ul style="margin-top:8px;">
+          <li style="font-size:18px;"><strong>product-strategist</strong> — 產品策略與路線圖</li>
+          <li style="font-size:18px;"><strong>business-analyst</strong> — 商業流程分析</li>
+          <li style="font-size:18px;"><strong>market-researcher</strong> — 市場分析與機會評估</li>
+          <li style="font-size:18px;"><strong>competitive-analyst</strong> — 競品分析與定位策略</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="img-container" style="max-height:40vh;margin-bottom:12px;">
+        <img src="img/ccforpms-guide.png" alt="ccforpms.com 總結圖"
+             style="max-height:40vh;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.1);"
+             onerror="this.style.display='none';">
+      </div>
+      <div class="img-container" style="max-height:30vh;">
+        <img src="img/aitmpl-marketplace.png" alt="aitmpl.com 市場推薦"
+             style="max-height:30vh;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.1);"
+             onerror="this.style.display='none';">
+      </div>
+    </div>
+  </div>
+  <div class="page-num">21 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 22: Designer 推薦資源 -->
+<!-- ============================================ -->
+<div class="slide bg-dark left-stack" id="s22">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#6EE7B7;">FOR DESIGNER</span>
+    <h2 style="color:#ECFDF5;">Designer 推薦資源</h2>
+  </div>
+  <div class="two-col" style="align-items:stretch;">
+    <div>
+      <div class="card-dark" style="margin-bottom:16px;">
+        <h3 style="font-size:22px;">ui-ux-pro-max Skill — 設計智能系統</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+          <div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:8px;text-align:center;">
+            <span style="font-size:28px;font-weight:800;color:var(--accent);font-family:'Poppins',sans-serif;">50</span>
+            <p style="font-size:14px;color:#A7F3D0;">UI 設計風格</p>
+          </div>
+          <div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:8px;text-align:center;">
+            <span style="font-size:28px;font-weight:800;color:var(--accent);font-family:'Poppins',sans-serif;">97</span>
+            <p style="font-size:14px;color:#A7F3D0;">配色方案</p>
+          </div>
+          <div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:8px;text-align:center;">
+            <span style="font-size:28px;font-weight:800;color:var(--accent);font-family:'Poppins',sans-serif;">57</span>
+            <p style="font-size:14px;color:#A7F3D0;">字體配對</p>
+          </div>
+          <div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:8px;text-align:center;">
+            <span style="font-size:28px;font-weight:800;color:var(--accent);font-family:'Poppins',sans-serif;">99</span>
+            <p style="font-size:14px;color:#A7F3D0;">UX 最佳實踐</p>
+          </div>
+        </div>
+        <p style="font-size:18px;color:#D1FAE5;margin-top:12px;">用自然語言描述需求 → 自動生成完整設計系統</p>
+      </div>
+      <div class="card-dark">
+        <h3 style="font-size:22px;">aitmpl.com — Designer 精選</h3>
+        <ul style="margin-top:8px;">
+          <li style="font-size:18px;color:#D1FAE5;"><strong style="color:var(--accent);">ui-ux-designer</strong> — 15,706 下載，全站第 3 熱門</li>
+          <li style="font-size:18px;color:#D1FAE5;"><strong style="color:var(--accent);">frontend-design</strong> — 13,293 下載，最熱門 Skill</li>
+          <li style="font-size:18px;color:#D1FAE5;"><strong style="color:var(--accent);">ui-design-system</strong> — Design Token + 元件文件</li>
+          <li style="font-size:18px;color:#D1FAE5;"><strong style="color:var(--accent);">ux-researcher-designer</strong> — Persona、Journey Map</li>
+          <li style="font-size:18px;color:#D1FAE5;"><strong style="color:var(--accent);">figma-implement-design</strong> — Figma → 1:1 程式碼</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="img-container" style="max-height:70vh;">
+        <img src="img/ui-ux-pro-max-overview.png" alt="ui-ux-pro-max 功能總覽"
+             style="max-height:70vh;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);"
+             onerror="this.style.display='none';">
+      </div>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">22 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 23: 安裝方式 -->
+<!-- ============================================ -->
+<div class="slide bg-light center-stack" id="s23">
+  <div class="section-bar"></div>
+  <span class="label">HOW TO INSTALL</span>
+  <h2 style="margin-bottom:16px;">一鍵安裝，馬上開始</h2>
+  <div class="three-col" style="max-width:1100px;align-items:stretch;">
+    <div class="card" style="text-align:center;padding:24px;">
+      <div class="step-num" style="margin:0 auto 12px;">1</div>
+      <h3 style="font-size:20px;color:var(--primary);">安裝 Claude Code</h3>
+      <div class="code-block" style="font-size:16px;margin-top:12px;text-align:left;">npm install -g @anthropic-ai/claude-code</div>
+      <p class="small-text" style="color:var(--text-muted);margin-top:8px;">或到 claude.ai/code 下載桌面版</p>
+    </div>
+    <div class="card" style="text-align:center;padding:24px;">
+      <div class="step-num" style="margin:0 auto 12px;">2</div>
+      <h3 style="font-size:20px;color:var(--primary);">安裝推薦 Skills</h3>
+      <div class="code-block" style="font-size:14px;margin-top:12px;text-align:left;line-height:2;">npx aitmpl install ui-ux-pro-max
+npx aitmpl install product-strategist
+npx aitmpl install ui-ux-designer</div>
+    </div>
+    <div class="card" style="text-align:center;padding:24px;">
+      <div class="step-num" style="margin:0 auto 12px;">3</div>
+      <h3 style="font-size:20px;color:var(--primary);">開始使用</h3>
+      <div class="code-block" style="font-size:16px;margin-top:12px;text-align:left;">claude
+> 幫我做一個產品的
+> 競品分析</div>
+      <p class="small-text" style="color:var(--text-muted);margin-top:8px;">用自然語言對話就好！</p>
+    </div>
+  </div>
+  <div style="margin-top:24px;display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+    <span class="badge badge-green" style="font-size:18px;padding:10px 24px;">ccforpms.com — PM 免費課程</span>
+    <span class="badge badge-yellow" style="font-size:18px;padding:10px 24px;">aitmpl.com/agents — Agent 市場</span>
+  </div>
+  <div class="page-num">23 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 24: 今天的 Takeaway -->
+<!-- ============================================ -->
+<div class="slide bg-light center-stack" id="s24">
+  <div class="section-bar"></div>
+  <span class="label">TAKEAWAY</span>
+  <h2 style="margin-bottom:8px;">今天的 Takeaway</h2>
+  <div class="img-container" style="flex:1;max-height:62vh;min-height:300px;">
+    <img src="img/takeaway.png" alt="Takeaway 總結圖"
+         style="max-height:62vh;width:auto;border-radius:20px;box-shadow:0 12px 48px rgba(5,150,105,0.15);"
+         onerror="this.style.display='none';this.parentElement.querySelector('.placeholder').style.display='block';">
+    <span class="placeholder" style="display:none;">Takeaway 總結圖</span>
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">判斷力 &gt; 執行力</span>
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">80% 想清楚 + 20% AI 做</span>
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">節點映射 = 精準落地</span>
+    <span class="badge badge-yellow" style="font-size:16px;padding:8px 18px;">Figma MCP = Single Source of Truth</span>
+    <span class="badge badge-green" style="font-size:16px;padding:8px 18px;">不需要寫 code，需要定義問題</span>
+  </div>
+  <div class="page-num">24 / 25</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 25: Q&A -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack" id="s25">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#A7F3D0;">THANK YOU</span>
+  <h1 style="font-size:96px;">Q&amp;A</h1>
+  <p class="subtitle" style="max-width:800px;">想試試看？</p>
+  <div class="three-col" style="margin-top:32px;max-width:900px;">
+    <div class="card-dark" style="text-align:center;padding:24px;">
+      <p class="small-text" style="color:var(--accent);font-weight:600;">Claude Code</p>
+      <p style="font-size:18px;color:#D1FAE5;margin-top:8px;">claude.ai/code</p>
+    </div>
+    <div class="card-dark" style="text-align:center;padding:24px;">
+      <p class="small-text" style="color:var(--accent);font-weight:600;">你需要什麼</p>
+      <p style="font-size:18px;color:#D1FAE5;margin-top:8px;">一個想法 +<br>願意花 30 分鐘學習</p>
+    </div>
+    <div class="card-dark" style="text-align:center;padding:24px;">
+      <p class="small-text" style="color:var(--accent);font-weight:600;">推薦起步</p>
+      <p style="font-size:18px;color:#D1FAE5;margin-top:8px;">從跟 Claude 聊<br>你的產品想法開始</p>
+    </div>
+  </div>
+  <div style="margin-top:36px;">
+    <p class="body-text" style="color:#A7F3D0;">我的 Threads：<span class="highlight">@ci.fullstack</span></p>
+    <p class="small-text" style="color:#6EE7B7;margin-top:8px;">持續分享 AI 驅動開發的實戰內容</p>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">25 / 25</div>
+</div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-hint">&#x2190; &#x2192; 方向鍵導覽 &middot; 空白鍵下一頁 &middot; F 全螢幕</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function showSlide(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    showSlide(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    showSlide(current - 1);
+  } else if (e.key === 'Home') {
+    showSlide(0);
+  } else if (e.key === 'End') {
+    showSlide(total - 1);
+  } else if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    diff > 0 ? showSlide(current + 1) : showSlide(current - 1);
+  }
+});
+
+// Click to advance
+document.addEventListener('click', (e) => {
+  if (e.clientX > window.innerWidth / 2) {
+    showSlide(current + 1);
+  } else {
+    showSlide(current - 1);
+  }
+});
+</script>
+
+</body>
+</html>

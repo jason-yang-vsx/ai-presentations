@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Presentations — Ci</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Noto Sans TC', sans-serif;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    color: #E2E8F0; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 40px;
+  }
+  h1 { font-size: 48px; font-weight: 800; margin-bottom: 12px; }
+  .subtitle { font-size: 20px; opacity: 0.6; margin-bottom: 48px; }
+  .cards { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
+  a.card {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 36px; width: 380px;
+    text-decoration: none; color: #E2E8F0;
+    transition: all 0.2s;
+  }
+  a.card:hover {
+    background: rgba(255,255,255,0.1); border-color: #10B981;
+    transform: translateY(-4px);
+  }
+  .card h2 { font-size: 24px; color: #10B981; margin-bottom: 12px; }
+  .card p { font-size: 16px; opacity: 0.7; line-height: 1.5; }
+  .card .tag { font-size: 13px; opacity: 0.4; margin-top: 16px; }
+  .footer { margin-top: 48px; font-size: 14px; opacity: 0.3; }
+</style>
+</head>
+<body>
+  <h1>AI Presentations</h1>
+  <p class="subtitle">@ci.fullstack — Ci | AI 驅動開發</p>
+  <div class="cards">
+    <a class="card" href="ai-driven-development/">
+      <h2>Agent Teams × Loop × SDD</h2>
+      <p>AI 驅動的一夜開發：swift-socket 遷移全流程。Claude Code + Agent Teams + Prospec SDD 自動化開發實戰。</p>
+      <div class="tag">28 slides · 2026-03-25</div>
+    </a>
+    <a class="card" href="ai-sharing-pm-designer/">
+      <h2>AI for PM & Designer</h2>
+      <p>Claude Code 不只是工程師的工具 — PM 和設計師也能用 AI 驅動工作流程。</p>
+      <div class="tag">presentation · 2026-03-26</div>
+    </a>
+  </div>
+  <p class="footer">Threads: @ci.fullstack</p>
+</body>
+</html>
