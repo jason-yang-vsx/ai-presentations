@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent 開發：從一人到團隊 — Lightning Talk</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #059669;
+    --primary-light: #10B981;
+    --primary-dark: #047857;
+    --accent: #FBBF24;
+    --bg: #ECFDF5;
+    --bg-white: #FFFFFF;
+    --bg-card: #F0FDF4;
+    --text: #064E3B;
+    --text-muted: #065F46;
+    --text-light: #6EE7B7;
+    --border: #A7F3D0;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    --success: #10B981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Open Sans', sans-serif;
+    background: #0F172A;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+    padding: 60px 100px;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; }
+
+  /* Slide Backgrounds */
+  .bg-gradient {
+    background: linear-gradient(135deg, #064E3B 0%, #047857 40%, #059669 100%);
+    color: #ECFDF5;
+  }
+  .bg-white {
+    background: #FFFFFF;
+    color: var(--text);
+  }
+  .bg-light {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .bg-dark {
+    background: linear-gradient(135deg, #022c22 0%, #064E3B 100%);
+    color: #ECFDF5;
+  }
+  .bg-accent {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+    color: #ECFDF5;
+  }
+
+  /* Typography — Lightning Talk sizes (bigger for small venue) */
+  h1, h2, h3 { font-family: 'Poppins', 'Noto Sans TC', sans-serif; }
+  h1 { font-size: 96px; font-weight: 800; line-height: 1.05; letter-spacing: -2px; }
+  h2 { font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
+  h3 { font-size: 42px; font-weight: 600; line-height: 1.15; }
+  .subtitle { font-size: 40px; font-weight: 300; line-height: 1.3; opacity: 0.85; }
+  .body-text { font-size: 32px; line-height: 1.5; }
+  .small-text { font-size: 28px; line-height: 1.4; }
+  .label { font-size: 22px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; }
+  .meta { font-size: 30px; opacity: 0.7; }
+
+  /* Layout helpers */
+  .center-stack {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 28px;
+  }
+  .left-stack {
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    width: 100%;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    width: 100%;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(5,150,105,0.08);
+  }
+  .card-dark {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08));
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 28px; margin-bottom: 12px; color: var(--primary); }
+  .card-dark h3 { color: var(--accent); }
+
+  /* Tags & Badges */
+  .badge {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 100px;
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+  .badge-yellow { background: #FEF3C7; color: #92400E; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-dark { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+  .badge-purple { background: #EDE9FE; color: #5B21B6; }
+
+  /* KPI */
+  .kpi { text-align: center; }
+  .kpi-number {
+    font-family: 'Poppins', sans-serif;
+    font-size: 88px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 26px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .bg-gradient .kpi-number,
+  .bg-dark .kpi-number { color: var(--accent); }
+  .bg-gradient .kpi-label,
+  .bg-dark .kpi-label { color: #A7F3D0; }
+
+  /* Big command */
+  .big-command {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,0,0,0.3);
+    padding: 28px 52px;
+    border-radius: 16px;
+    border: 2px solid rgba(251,191,36,0.3);
+    text-align: center;
+    letter-spacing: -1px;
+  }
+
+  /* Big quote */
+  .big-quote {
+    font-size: 44px;
+    font-weight: 500;
+    line-height: 1.4;
+    font-style: italic;
+    opacity: 0.9;
+    max-width: 900px;
+  }
+
+  /* Decorative elements */
+  .corner-decor {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .corner-decor.top-right {
+    top: -100px; right: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+  .corner-decor.bottom-left {
+    bottom: -100px; left: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+
+  /* Page number */
+  .page-num {
+    position: absolute;
+    bottom: 30px;
+    right: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    opacity: 0.4;
+  }
+
+  /* Section title bar */
+  .section-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--accent));
+  }
+
+  /* Highlight */
+  .highlight { color: var(--accent); }
+  .highlight-green { color: var(--primary-light); }
+  .highlight-red { color: var(--danger); }
+
+  /* Navigation */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+
+  /* Image in slide */
+  .slide img {
+    max-width: 80%;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+
+  /* List */
+  ul { list-style: none; padding: 0; }
+  ul li {
+    font-size: 30px;
+    padding: 10px 0;
+    padding-left: 36px;
+    position: relative;
+    line-height: 1.4;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 12px;
+    height: 12px;
+    background: var(--primary-light);
+    border-radius: 50%;
+  }
+  .bg-gradient ul li::before,
+  .bg-dark ul li::before,
+  .bg-accent ul li::before { background: var(--accent); }
+
+  /* Pain vs Solution layout */
+  .pain-solution {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 40px;
+    align-items: center;
+    width: 100%;
+  }
+  .pain-box, .solution-box {
+    padding: 36px;
+    border-radius: 20px;
+  }
+  .pain-box {
+    background: rgba(239,68,68,0.08);
+    border: 2px solid rgba(239,68,68,0.2);
+  }
+  .solution-box {
+    background: rgba(16,185,129,0.08);
+    border: 2px solid rgba(16,185,129,0.2);
+  }
+  .arrow-divider {
+    font-size: 64px;
+    color: var(--primary);
+  }
+
+  /* Output list for slide 3 */
+  .output-list {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .output-item {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 18px 28px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    min-width: 200px;
+  }
+  .output-item .icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+  .output-item .name {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 22px;
+    color: var(--text-light);
+  }
+
+  /* CTA link */
+  .cta-link {
+    font-size: 28px;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 2px solid rgba(251,191,36,0.4);
+    padding-bottom: 4px;
+    transition: opacity 0.2s;
+  }
+  .cta-link:hover { opacity: 0.8; }
+
+  /* Tagline */
+  .tagline {
+    font-size: 30px;
+    font-weight: 500;
+    opacity: 0.8;
+    max-width: 800px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+<!-- ===== SLIDE 1: Cover ===== -->
+<div class="slide bg-gradient center-stack active">
+  <div class="corner-decor top-right"></div>
+  <div class="corner-decor bottom-left"></div>
+
+  <span class="label" style="letter-spacing: 5px;">Taipei | Claude Code for Developers</span>
+  <h1>Multi-Agent <span class="highlight">開發</span></h1>
+  <h2 style="font-size: 56px; font-weight: 500; opacity: 0.9;">從一人到團隊</h2>
+  <div style="margin-top: 16px;">
+    <p class="meta">Jason Yang <span style="opacity:0.5;">|</span> <span style="color: var(--accent);">@ci.fullstack</span></p>
+    <p class="meta" style="font-size: 24px; margin-top: 8px;">2026-04-09</p>
+  </div>
+
+  <div class="page-num">1 / 6</div>
+</div>
+
+<!-- ===== SLIDE 2: Pain → Solution ===== -->
+<div class="slide bg-white left-stack">
+  <div class="section-bar"></div>
+
+  <h2 style="margin-bottom: 12px;">痛點 <span style="color: var(--primary);">→</span> 解法</h2>
+
+  <div class="pain-solution">
+    <div class="pain-box">
+      <h3 style="color: var(--danger); font-size: 36px; margin-bottom: 16px;">每次都在重複</h3>
+      <ul>
+        <li style="font-size: 26px;">每個專案手動建 Agent 設定</li>
+        <li style="font-size: 26px;">角色分工靠自己記</li>
+        <li style="font-size: 26px;">Backlog 格式不統一</li>
+      </ul>
+    </div>
+
+    <div class="arrow-divider">→</div>
+
+    <div class="solution-box">
+      <h3 style="color: var(--primary); font-size: 36px; margin-bottom: 16px;">一鍵搞定</h3>
+      <div class="big-command" style="font-size: 36px; padding: 18px 32px; background: rgba(5,150,105,0.08); border-color: rgba(5,150,105,0.3); color: var(--primary);">/dev-team-creator</div>
+      <p style="font-size: 24px; margin-top: 16px; color: var(--text-muted);">輸入專案描述 → 自動產出整個團隊</p>
+    </div>
+  </div>
+
+  <div class="page-num" style="color: var(--text);">2 / 6</div>
+</div>
+
+<!-- ===== SLIDE 3: One Command to Build a Team ===== -->
+<div class="slide bg-dark center-stack">
+  <div class="section-bar"></div>
+
+  <span class="label">Core Feature</span>
+  <h2 style="font-size: 56px;">一鍵建團隊</h2>
+
+  <div class="big-command">/dev-team-creator</div>
+
+  <div class="output-list">
+    <div class="output-item">
+      <div class="icon">🤖</div>
+      <div class="name">agents/</div>
+      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">7 個專業 Agent</p>
+    </div>
+    <div class="output-item">
+      <div class="icon">📜</div>
+      <div class="name">CONSTITUTION.md</div>
+      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">團隊規範與流程</p>
+    </div>
+    <div class="output-item">
+      <div class="icon">📋</div>
+      <div class="name">backlog.md</div>
+      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">結構化 Story Backlog</p>
+    </div>
+  </div>
+
+  <img src="img/claude-code-agent-teams-flow.png" alt="Claude Code Agent Teams Flow" style="max-width: 65%; max-height: 32vh; margin-top: 12px;">
+
+  <div class="page-num">3 / 6</div>
+</div>
+
+<!-- ===== SLIDE 4: Agent Teams Architecture ===== -->
+<div class="slide bg-light center-stack">
+  <div class="section-bar"></div>
+
+  <span class="label" style="color: var(--text-muted);">Architecture</span>
+  <h2 style="font-size: 52px; color: var(--text);">Agent Teams <span style="color: var(--primary);">架構</span></h2>
+  <p class="body-text" style="color: var(--text-muted); max-width: 700px;">Orchestrator 派任 → 7 Agent 平行執行 → 自動合併結果</p>
+
+  <img src="img/multi-agent-orchestrator.png" alt="Multi-Agent Orchestrator" style="max-width: 75%; max-height: 55vh;">
+
+  <div class="page-num" style="color: var(--text);">4 / 6</div>
+</div>
+
+<!-- ===== SLIDE 5: Results ===== -->
+<div class="slide bg-dark center-stack">
+  <div class="section-bar"></div>
+
+  <span class="label">Real Results</span>
+  <h2 style="font-size: 56px;">實戰成果</h2>
+
+  <div class="four-col" style="margin-top: 12px;">
+    <div class="kpi">
+      <div class="kpi-number">15</div>
+      <div class="kpi-label">Stories 完成</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">196</div>
+      <div class="kpi-label">Tests 撰寫</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">99%+</div>
+      <div class="kpi-label">Pass Rate</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number">8</div>
+      <div class="kpi-label">Days 完成</div>
+    </div>
+  </div>
+
+  <div class="card-dark" style="margin-top: 20px; max-width: 800px;">
+    <p class="body-text" style="color: #D1FAE5;">
+      <span class="highlight">Backlog-Driven SDD</span> + <span class="highlight">/loop</span> 每 10 分鐘自動推進
+    </p>
+    <p style="font-size: 24px; color: #A7F3D0; margin-top: 8px;">一個人 + 7 AI Agent = 一支完整開發團隊</p>
+  </div>
+
+  <div class="page-num">5 / 6</div>
+</div>
+
+<!-- ===== SLIDE 6: CTA + Q&A ===== -->
+<div class="slide bg-gradient center-stack">
+  <div class="corner-decor top-right"></div>
+  <div class="corner-decor bottom-left"></div>
+
+  <h2 style="font-size: 60px;">Try It Today</h2>
+
+  <div class="big-command">/dev-team-creator</div>
+
+  <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px; align-items: center;">
+    <p class="body-text">
+      Threads: <span class="highlight">@ci.fullstack</span>
+    </p>
+    <p class="small-text" style="opacity: 0.7;">
+      投影片: <a href="https://jason-yang-vsx.github.io/ai-presentations/multi-agent-development/" class="cta-link" target="_blank">jason-yang-vsx.github.io/ai-presentations</a>
+    </p>
+  </div>
+
+  <div style="margin-top: 32px;">
+    <h3 style="font-size: 48px; font-weight: 700;">Q & A</h3>
+  </div>
+
+  <div class="page-num">6 / 6</div>
+</div>
+
+</div><!-- end .deck -->
+
+<div class="nav-hint">← → / Space / Swipe / Click to navigate &nbsp;|&nbsp; F = fullscreen</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function showSlide(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    showSlide(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    showSlide(current - 1);
+  } else if (e.key === 'Home') {
+    showSlide(0);
+  } else if (e.key === 'End') {
+    showSlide(total - 1);
+  } else if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    diff > 0 ? showSlide(current + 1) : showSlide(current - 1);
+  }
+});
+
+// Click to advance
+document.addEventListener('click', (e) => {
+  if (e.clientX > window.innerWidth / 2) {
+    showSlide(current + 1);
+  } else {
+    showSlide(current - 1);
+  }
+});
+</script>
+
+</body>
+</html>
