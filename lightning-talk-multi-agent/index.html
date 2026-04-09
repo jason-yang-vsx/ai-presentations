@@ -363,103 +363,191 @@
 
 <div class="deck">
 
-<!-- ===== SLIDE 1: Cover ===== -->
+<!-- ===== SLIDE 1: 封面 ===== -->
 <div class="slide bg-gradient center-stack active">
   <div class="corner-decor top-right"></div>
   <div class="corner-decor bottom-left"></div>
-
-  <span class="label" style="letter-spacing: 5px;">Taipei | Claude Code for Developers</span>
+  <span class="label" style="letter-spacing:5px;">Lightning Talk — 3 min</span>
   <h1>Multi-Agent <span class="highlight">開發</span></h1>
-  <h2 style="font-size: 56px; font-weight: 500; opacity: 0.9;">從一人到團隊</h2>
-  <div style="margin-top: 16px;">
-    <p class="meta">Jason Yang <span style="opacity:0.5;">|</span> <span style="color: var(--accent);">@ci.fullstack</span></p>
-    <p class="meta" style="font-size: 24px; margin-top: 8px;">2026-04-09</p>
+  <h2 style="font-size:52px;font-weight:500;opacity:0.9;">一個人 + 7 個 AI 同事</h2>
+  <div style="margin-top:16px;">
+    <p class="meta"><span style="font-weight:700;font-size:30px;">Ci</span> <span style="opacity:0.5;">|</span> <span style="color:var(--accent);">@ci.fullstack</span></p>
+    <p class="meta" style="font-size:22px;margin-top:8px;">2026-04-09 · Taipei Claude Code for Developers</p>
   </div>
-
-  <div class="page-num">1 / 6</div>
+  <div class="page-num">1 / 10</div>
 </div>
 
-<!-- ===== SLIDE 2: Pain → Solution ===== -->
+<!-- ===== SLIDE 2: 故事 — 工作困境 ===== -->
 <div class="slide bg-white left-stack">
   <div class="section-bar"></div>
-
-  <h2 style="margin-bottom: 12px;">痛點 <span style="color: var(--primary);">→</span> 解法</h2>
-
+  <h2 style="font-size:48px;margin-bottom:8px;">我的困境</h2>
   <div class="pain-solution">
     <div class="pain-box">
-      <h3 style="color: var(--danger); font-size: 36px; margin-bottom: 16px;">每次都在重複</h3>
+      <h3 style="color:var(--danger);font-size:32px;margin-bottom:12px;">白天在公司</h3>
       <ul>
-        <li style="font-size: 26px;">每個專案手動建 Agent 設定</li>
-        <li style="font-size: 26px;">角色分工靠自己記</li>
-        <li style="font-size: 26px;">Backlog 格式不統一</li>
+        <li style="font-size:24px;">Backend 工程師，每天寫 Python/FastAPI</li>
+        <li style="font-size:24px;">Sprint ticket 永遠做不完</li>
+        <li style="font-size:24px;">想做 side project 但沒時間</li>
       </ul>
     </div>
-
     <div class="arrow-divider">→</div>
-
     <div class="solution-box">
-      <h3 style="color: var(--primary); font-size: 36px; margin-bottom: 16px;">一鍵搞定</h3>
-      <div class="big-command" style="font-size: 36px; padding: 18px 32px; background: rgba(5,150,105,0.08); border-color: rgba(5,150,105,0.3); color: var(--primary);">/dev-team-creator</div>
-      <p style="font-size: 24px; margin-top: 16px; color: var(--text-muted);">輸入專案描述 → 自動產出整個團隊</p>
+      <h3 style="color:var(--primary);font-size:32px;margin-bottom:12px;">晚上讓 AI 團隊幫忙</h3>
+      <ul>
+        <li style="font-size:24px;">7 個 AI Agent <b>同時開發</b></li>
+        <li style="font-size:24px;">我只要<b>定義 Spec</b>，它們執行</li>
+        <li style="font-size:24px;">睡一覺起來，<b>整個 App 就寫好了</b></li>
+      </ul>
     </div>
   </div>
-
-  <div class="page-num" style="color: var(--text);">2 / 6</div>
+  <p style="font-size:26px;color:var(--primary);font-weight:600;margin-top:8px;">怎麼做到的？Claude Code Agent Teams</p>
+  <div class="page-num" style="color:var(--text);">2 / 10</div>
 </div>
 
-<!-- ===== SLIDE 3: One Command to Build a Team ===== -->
+<!-- ===== SLIDE 3: Claude Code Agent Teams ===== -->
 <div class="slide bg-dark center-stack">
-  <div class="section-bar"></div>
-
-  <span class="label">Core Feature</span>
-  <h2 style="font-size: 56px;">一鍵建團隊</h2>
-
-  <div class="big-command">/dev-team-creator</div>
-
-  <div class="output-list">
-    <div class="output-item">
-      <div class="icon">🤖</div>
-      <div class="name">agents/</div>
-      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">7 個專業 Agent</p>
+  <div class="corner-decor top-right"></div>
+  <span class="label" style="color:#6EE7B7;">Claude Code Feature</span>
+  <h2 style="font-size:52px;color:#ECFDF5;">Agent Teams</h2>
+  <div style="display:flex;gap:32px;max-width:900px;">
+    <div class="card-dark" style="flex:1;padding:24px;">
+      <h3 style="font-size:24px;">多個 Claude Code 協作</h3>
+      <ul style="font-size:22px;">
+        <li>Team Lead 協調分工</li>
+        <li>每個 Agent 獨立 context</li>
+        <li>Peer-to-peer 直接溝通</li>
+        <li>Git worktree 隔離</li>
+      </ul>
     </div>
-    <div class="output-item">
-      <div class="icon">📜</div>
-      <div class="name">CONSTITUTION.md</div>
-      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">團隊規範與流程</p>
-    </div>
-    <div class="output-item">
-      <div class="icon">📋</div>
-      <div class="name">backlog.md</div>
-      <p style="font-size: 18px; color: #A7F3D0; margin-top: 4px;">結構化 Story Backlog</p>
+    <div class="card-dark" style="flex:1;padding:24px;">
+      <h3 style="font-size:24px;">自定義角色</h3>
+      <ul style="font-size:22px;">
+        <li>放 <code style="color:var(--accent);">.claude/agents/</code></li>
+        <li>每個指定 model + tools</li>
+        <li>Opus 做架構，Sonnet 寫 code</li>
+        <li>Haiku 做監控</li>
+      </ul>
     </div>
   </div>
-
-  <img src="img/claude-code-agent-teams-flow.png" alt="Claude Code Agent Teams Flow" style="max-width: 65%; max-height: 32vh; margin-top: 12px;">
-
-  <div class="page-num">3 / 6</div>
+  <p style="font-size:26px;color:#A7F3D0;margin-top:12px;">不是 subagent — 是真正的<span class="highlight">多人協作</span></p>
+  <div class="page-num" style="color:#A7F3D0;">3 / 10</div>
 </div>
 
-<!-- ===== SLIDE 4: Agent Teams Architecture ===== -->
-<div class="slide bg-light center-stack">
+<!-- ===== SLIDE 4: /dev-team-creator ===== -->
+<div class="slide bg-white left-stack">
   <div class="section-bar"></div>
-
-  <span class="label" style="color: var(--text-muted);">Architecture</span>
-  <h2 style="font-size: 52px; color: var(--text);">Agent Teams <span style="color: var(--primary);">架構</span></h2>
-  <p class="body-text" style="color: var(--text-muted); max-width: 700px;">Orchestrator 派任 → 7 Agent 平行執行 → 自動合併結果</p>
-
-  <img src="img/multi-agent-orchestrator.png" alt="Multi-Agent Orchestrator" style="max-width: 75%; max-height: 55vh;">
-
-  <div class="page-num" style="color: var(--text);">4 / 6</div>
+  <h2 style="font-size:48px;">一鍵建團隊</h2>
+  <div class="big-command" style="font-size:40px;padding:20px 40px;background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.3);color:var(--primary);">/dev-team-creator "建一個記帳 App"</div>
+  <div class="three-col" style="margin-top:16px;">
+    <div class="card" style="text-align:center;padding:24px;">
+      <div style="font-size:40px;margin-bottom:8px;">&#x1F916;</div>
+      <h3 style="font-size:22px;">agents/</h3>
+      <p style="font-size:20px;color:var(--text-muted);">7 個角色定義<br>Tech Lead, Architect, Dev, QA, Designer, PM, SDD Expert</p>
+    </div>
+    <div class="card" style="text-align:center;padding:24px;">
+      <div style="font-size:40px;margin-bottom:8px;">&#x1F4DC;</div>
+      <h3 style="font-size:22px;">CONSTITUTION.md</h3>
+      <p style="font-size:20px;color:var(--text-muted);">品質規範<br>Coding standards, review checklist</p>
+    </div>
+    <div class="card" style="text-align:center;padding:24px;">
+      <div style="font-size:40px;margin-bottom:8px;">&#x1F4CB;</div>
+      <h3 style="font-size:22px;">backlog.md</h3>
+      <p style="font-size:20px;color:var(--text-muted);">任務清單<br>Stories + 優先序 + 驗收條件</p>
+    </div>
+  </div>
+  <div class="page-num" style="color:var(--text);">4 / 10</div>
 </div>
 
-<!-- ===== SLIDE 5: Results ===== -->
+<!-- ===== SLIDE 5: 截圖 — 建團隊結果 ===== -->
 <div class="slide bg-dark center-stack">
+  <span class="label" style="color:#6EE7B7;">Real Output</span>
+  <h2 style="font-size:44px;color:#ECFDF5;">建完長這樣</h2>
+  <div style="display:flex;gap:32px;align-items:center;justify-content:center;">
+    <img src="img/dev-team-result.png" alt="Dev Team Result" style="max-height:55vh;max-width:48%;border:2px solid rgba(255,255,255,0.15);">
+    <img src="img/team-roster.png" alt="Team Roster" style="max-height:55vh;max-width:48%;border:2px solid rgba(255,255,255,0.15);">
+  </div>
+  <p style="font-size:22px;color:#A7F3D0;margin-top:8px;">Web 記帳系統 — 7 位 AI agents · 13 stories · 3 phases</p>
+  <div class="page-num" style="color:#A7F3D0;">5 / 10</div>
+</div>
+
+<!-- ===== SLIDE 6: /loop + SDD ===== -->
+<div class="slide bg-light left-stack">
   <div class="section-bar"></div>
+  <h2 style="font-size:44px;">/loop + SDD = 自動開發引擎</h2>
+  <div class="two-col">
+    <div>
+      <div class="card" style="margin-bottom:16px;padding:24px;">
+        <h3 style="font-size:24px;">/loop — 定時驅動</h3>
+        <div class="big-command" style="font-size:28px;padding:12px 24px;background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.3);color:var(--primary);margin-top:8px;">/loop 5m /overnight-loop</div>
+        <p style="font-size:20px;color:var(--text-muted);margin-top:12px;">每 5 分鐘自動觸發，Tech Lead 檢查 backlog → 派任 → 推進</p>
+      </div>
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:24px;">SDD — Spec-Driven Development</h3>
+        <p style="font-size:20px;color:var(--text-muted);margin-bottom:8px;">通用規格驅動框架（spec-kit / OpenSpec）</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-blue" style="font-size:14px;">explore</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-blue" style="font-size:14px;">plan</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-blue" style="font-size:14px;">design</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-blue" style="font-size:14px;">tasks</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-green" style="font-size:14px;">implement</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-green" style="font-size:14px;">verify</span>
+          <span style="font-size:18px;color:var(--primary);">→</span>
+          <span class="badge badge-yellow" style="font-size:14px;">archive</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card-accent" style="padding:24px;">
+        <h3 style="font-size:24px;color:var(--primary);">自動循環流程</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-green" style="font-size:16px;">1</span>
+            <span style="font-size:20px;">/loop 觸發 → Tech Lead 讀 backlog</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-green" style="font-size:16px;">2</span>
+            <span style="font-size:20px;">找到下一個未完成 Story</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-green" style="font-size:16px;">3</span>
+            <span style="font-size:20px;">按 SDD 階段派任對應 Agent</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-green" style="font-size:16px;">4</span>
+            <span style="font-size:20px;">完成 → 更新 backlog → 下一個</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge badge-yellow" style="font-size:16px;">5</span>
+            <span style="font-size:20px;">重複直到 backlog 全部完成</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num" style="color:var(--text);">6 / 10</div>
+</div>
 
-  <span class="label">Real Results</span>
-  <h2 style="font-size: 56px;">實戰成果</h2>
+<!-- ===== SLIDE 7: 流程圖 ===== -->
+<div class="slide bg-white center-stack">
+  <div class="section-bar"></div>
+  <span class="label" style="color:var(--text-muted);">Full Flow</span>
+  <h2 style="font-size:44px;">完整流程圖</h2>
+  <img src="img/claude-code-agent-teams-flow.png" alt="Claude Code Agent Teams Flow" style="max-width:85%;max-height:62vh;">
+  <p style="font-size:22px;color:var(--text-muted);">開發者 → /dev-team-creator → agents + constitution + backlog → /loop → 自動交付</p>
+  <div class="page-num" style="color:var(--text);">7 / 10</div>
+</div>
 
-  <div class="four-col" style="margin-top: 12px;">
+<!-- ===== SLIDE 8: 實戰成果 ===== -->
+<div class="slide bg-dark center-stack">
+  <div class="corner-decor top-right"></div>
+  <span class="label" style="color:#6EE7B7;">Real Results — RepoLens</span>
+  <h2 style="font-size:52px;color:#ECFDF5;">一夜的產出</h2>
+  <div class="four-col" style="margin-top:16px;">
     <div class="kpi">
       <div class="kpi-number">10</div>
       <div class="kpi-label">Stories 完成</div>
@@ -477,40 +565,47 @@
       <div class="kpi-label">一夜完成</div>
     </div>
   </div>
-
-  <div class="card-dark" style="margin-top: 20px; max-width: 800px;">
-    <p class="body-text" style="color: #D1FAE5;">
-      <span class="highlight">Backlog-Driven SDD</span> + <span class="highlight">/loop</span> 每 10 分鐘自動推進
+  <div class="card-dark" style="margin-top:16px;max-width:800px;">
+    <p class="body-text" style="color:#D1FAE5;">
+      RepoLens — GitHub Repo 視覺化分析工具
     </p>
-    <p style="font-size: 24px; color: #A7F3D0; margin-top: 8px;">一個人 + 7 AI Agent = 一支完整開發團隊</p>
+    <p style="font-size:22px;color:#A7F3D0;margin-top:6px;">React 19 + shadcn/ui + Tailwind · E2E Tests · Vercel 部署</p>
   </div>
-
-  <div class="page-num">5 / 6</div>
+  <div class="page-num" style="color:#A7F3D0;">8 / 10</div>
 </div>
 
-<!-- ===== SLIDE 6: CTA + Q&A ===== -->
+<!-- ===== SLIDE 9: 架構圖 ===== -->
+<div class="slide bg-light center-stack">
+  <div class="section-bar"></div>
+  <span class="label" style="color:var(--text-muted);">Architecture</span>
+  <h2 style="font-size:44px;">Orchestrator-Worker 模式</h2>
+  <img src="img/multi-agent-orchestrator.png" alt="Multi-Agent Orchestrator" style="max-width:85%;max-height:60vh;">
+  <div class="page-num" style="color:var(--text);">9 / 10</div>
+</div>
+
+<!-- ===== SLIDE 10: Threads CTA ===== -->
 <div class="slide bg-gradient center-stack">
   <div class="corner-decor top-right"></div>
   <div class="corner-decor bottom-left"></div>
-
-  <h2 style="font-size: 60px;">Try It Today</h2>
-
-  <div class="big-command">/dev-team-creator</div>
-
-  <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px; align-items: center;">
-    <p class="body-text">
-      Threads: <span class="highlight">@ci.fullstack</span>
-    </p>
-    <p class="small-text" style="opacity: 0.7;">
-      投影片: <a href="https://jason-yang-vsx.github.io/ai-presentations/multi-agent-development/" class="cta-link" target="_blank">jason-yang-vsx.github.io/ai-presentations</a>
-    </p>
+  <div style="display:flex;gap:40px;align-items:center;max-width:1000px;">
+    <div style="flex:1;text-align:center;">
+      <img src="img/threads.jpg" alt="Threads Profile" style="width:260px;height:260px;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
+    </div>
+    <div style="flex:1.2;text-align:left;">
+      <p style="font-size:20px;opacity:0.5;letter-spacing:2px;">THREADS</p>
+      <p style="font-size:48px;font-weight:800;font-family:'Poppins','Noto Sans TC',sans-serif;color:#FFFFFF;">@ci.fullstack</p>
+      <p style="font-size:28px;font-weight:700;color:var(--accent);margin-top:4px;">Ci | AI 驅動開發</p>
+      <p style="font-size:22px;opacity:0.7;line-height:1.6;margin-top:12px;">
+        每天分享 AI 驅動開發的真實工作流程<br>
+        從踩坑到建流程，都是自己跑過的
+      </p>
+      <div style="margin-top:20px;">
+        <img src="img/threads_code.jpg" alt="Threads QR" style="width:140px;height:140px;border-radius:12px;">
+      </div>
+    </div>
   </div>
-
-  <div style="margin-top: 32px;">
-    <h3 style="font-size: 48px; font-weight: 700;">Q & A</h3>
-  </div>
-
-  <div class="page-num">6 / 6</div>
+  <p style="font-size:24px;opacity:0.6;margin-top:16px;">完整投影片: jason-yang-vsx.github.io/ai-presentations</p>
+  <div class="page-num" style="color:#A7F3D0;">10 / 10</div>
 </div>
 
 </div><!-- end .deck -->
