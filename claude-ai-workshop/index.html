@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你的 AI 同事使用說明書 — Jason</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --primary: #059669;
+  --primary-light: #10B981;
+  --primary-dark: #047857;
+  --accent: #FBBF24;
+  --accent-claude: #D97757;
+  --bg: #ECFDF5;
+  --text: #064E3B;
+  --text-muted: #065F46;
+  --border: #A7F3D0;
+  --white: #FFFFFF;
+  --dark-bg: #022c22;
+  --code-bg: #1e293b;
+  --slide-width: 100vw;
+  --slide-height: 100vh;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+  background: #000;
+  color: var(--text);
+}
+
+/* ===== Slide Container ===== */
+.slides-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 72px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  overflow: hidden;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== Backgrounds ===== */
+.bg-white { background: var(--white); }
+.bg-light { background: var(--bg); }
+.bg-dark {
+  background: linear-gradient(135deg, var(--dark-bg) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+}
+.bg-gradient {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+  color: var(--white);
+}
+.bg-accent-gradient {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: var(--white);
+}
+
+/* ===== Typography ===== */
+h1, h2, h3 { font-family: 'Poppins', 'Noto Sans TC', sans-serif; }
+
+.slide-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.slide-subtitle {
+  font-size: 28px;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.big-text {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  max-width: 900px;
+}
+
+.huge-text {
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.kpi-number {
+  font-family: 'Poppins', sans-serif;
+  font-size: 72px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.bg-dark .slide-title,
+.bg-gradient .slide-title,
+.bg-accent-gradient .slide-title { color: var(--white); }
+
+.section-label {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 4px;
+}
+.badge-all { background: var(--accent); color: #1a1a2e; }
+.badge-eng { background: var(--primary-light); color: var(--white); }
+.badge-pm { background: var(--accent-claude); color: var(--white); }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.card-dark {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 32px;
+  backdrop-filter: blur(10px);
+}
+
+/* ===== Tables ===== */
+.slide-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: 18px;
+  background: var(--white);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.slide-table th {
+  background: var(--primary);
+  color: var(--white);
+  padding: 16px 24px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.slide-table td {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.slide-table tr:last-child td { border-bottom: none; }
+.slide-table tr:nth-child(even) td { background: #f0fdf4; }
+
+/* ===== Grid Layouts ===== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* ===== Content Helpers ===== */
+.content-wrap {
+  width: 100%;
+  max-width: 1100px;
+  text-align: left;
+}
+
+.bullet-list {
+  list-style: none;
+  padding: 0;
+}
+
+.bullet-list li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 16px;
+  font-size: 22px;
+  line-height: 1.6;
+}
+
+.bullet-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--primary-light);
+  font-weight: 700;
+}
+
+.bg-dark .bullet-list li::before,
+.bg-gradient .bullet-list li::before { color: var(--accent); }
+
+.highlight { color: var(--accent); font-weight: 700; }
+.highlight-green { color: var(--primary-light); font-weight: 700; }
+
+.quote {
+  font-size: 32px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: center;
+  max-width: 800px;
+  line-height: 1.5;
+  position: relative;
+  padding: 20px 40px;
+}
+
+.quote::before {
+  content: '\201C';
+  font-size: 80px;
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  opacity: 0.2;
+  font-family: 'Poppins', serif;
+}
+
+.code-block {
+  background: var(--code-bg);
+  border-radius: 12px;
+  padding: 24px 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: #e2e8f0;
+  line-height: 1.7;
+  text-align: left;
+  overflow-x: auto;
+}
+
+.slide-image {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  object-fit: contain;
+}
+
+.slide-image-large {
+  max-width: 100%;
+  max-height: 65vh;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  object-fit: contain;
+}
+
+.image-left-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.image-left-layout .image-side {
+  text-align: center;
+}
+
+.image-left-layout .text-side {
+  text-align: left;
+}
+
+.spacer { height: 24px; }
+.spacer-sm { height: 12px; }
+
+/* ===== Divider Slide ===== */
+.section-divider {
+  justify-content: center;
+  text-align: center;
+}
+
+.section-divider .slide-title {
+  font-size: 56px;
+  font-weight: 800;
+  margin-bottom: 0;
+}
+
+/* ===== Progress Bar ===== */
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--primary-light);
+  transition: width 0.4s ease;
+  z-index: 100;
+}
+
+/* ===== Page Number ===== */
+.page-number {
+  position: fixed;
+  bottom: 16px;
+  right: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.slide.bg-white ~ .page-number,
+.slide.bg-light ~ .page-number { color: rgba(0,0,0,0.3); }
+
+/* ===== Special Layouts ===== */
+.hand-raise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  max-width: 1000px;
+  text-align: center;
+}
+
+.hand-raise-item .kpi-number {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.hand-raise-item p {
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.vs-layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  max-width: 1100px;
+  width: 100%;
+}
+
+.vs-divider {
+  font-family: 'Poppins', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.action-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.action-card h3 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--accent);
+}
+
+.action-card .step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 18px;
+  text-align: left;
+}
+
+.action-card .step-num {
+  background: var(--primary-light);
+  color: var(--white);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ===== Cover Slide ===== */
+.cover-title {
+  font-size: 64px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.cover-speaker {
+  font-size: 22px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.cover-meta {
+  font-size: 18px;
+  opacity: 0.5;
+  margin-top: 20px;
+}
+
+/* ===== QA Slide ===== */
+.qa-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 120px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  margin-bottom: 40px;
+}
+
+.qa-info {
+  font-size: 20px;
+  opacity: 0.8;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.qr-placeholder {
+  width: 180px;
+  height: 180px;
+  border: 3px dashed rgba(255,255,255,0.3);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0.5;
+  margin: 24px auto;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .slide { padding: 40px 40px; }
+  .cover-title { font-size: 48px; }
+  .slide-title { font-size: 36px; }
+  .big-text { font-size: 40px; }
+  .huge-text { font-size: 52px; }
+  .kpi-number { font-size: 56px; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .hand-raise-grid { grid-template-columns: 1fr; gap: 24px; }
+  .vs-layout { grid-template-columns: 1fr; }
+  .vs-divider { display: none; }
+  .slide-table { font-size: 15px; }
+  .slide-table th, .slide-table td { padding: 10px 14px; }
+}
+
+/* ===== Emphasis list for dark bg ===== */
+.emphasis-list {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.emphasis-list li {
+  font-size: 24px;
+  line-height: 1.7;
+  margin-bottom: 12px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.emphasis-list li::before {
+  content: '\2014';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* flow steps */
+.flow-steps {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+
+.flow-step {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.flow-step .step-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.flow-step .step-name {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.flow-arrow {
+  font-size: 28px;
+  color: var(--accent);
+}
+
+.bg-light .flow-step {
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.bg-light .flow-arrow { color: var(--primary); }
+.bg-light .flow-step .step-name { color: var(--text); }
+
+/* timeline */
+.timeline {
+  display: flex;
+  gap: 32px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.timeline-item {
+  flex: 1;
+  position: relative;
+  padding-top: 24px;
+  border-top: 4px solid var(--accent);
+}
+
+.timeline-item .year {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.timeline-item h3 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.timeline-item p {
+  font-size: 17px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+/* defense */
+.defense-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.defense-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.defense-card .defense-num {
+  font-family: 'Poppins', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.defense-card h4 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.defense-card p {
+  font-size: 15px;
+  opacity: 0.7;
+  line-height: 1.5;
+}
+
+/* ===== Compact table for dark slides ===== */
+.slide-table-dark {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: 17px;
+  background: rgba(255,255,255,0.05);
+}
+
+.slide-table-dark th {
+  background: rgba(255,255,255,0.12);
+  color: var(--accent);
+  padding: 14px 20px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.slide-table-dark td {
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+}
+
+.slide-table-dark tr:last-child td { border-bottom: none; }
+
+@media (max-width: 1024px) {
+  .defense-grid { grid-template-columns: 1fr 1fr; }
+  .timeline { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="slides-container">
+
+<!-- ==================== P1: 封面 ==================== -->
+<div class="slide bg-gradient active" id="slide-1">
+  <div class="section-label">Workshop / 2026-04-14</div>
+  <h1 class="cover-title">你的 AI 同事<br>使用說明書</h1>
+  <p class="slide-subtitle" style="font-size: 22px; opacity: 0.75; margin-bottom: 24px;">如何使用 Claude AI，讓它更聰明、更了解你的偏好</p>
+  <p class="cover-speaker">Jason</p>
+  <p class="cover-speaker">Claude AI 分享會</p>
+  <div class="cover-meta">40 min talk + 10 min Q&A</div>
+</div>
+
+<!-- ==================== 關於我 ==================== -->
+<div class="slide bg-dark" id="slide-about-me">
+  <div class="content-wrap">
+    <h2 class="slide-title" style="font-size: 52px; margin-bottom: 40px;">關於我</h2>
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: center; max-width: 1000px;">
+      <div style="text-align: center;">
+        <img src="images/jason-photo.jpg" alt="Jason Yang" style="width: 100%; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); object-fit: cover;">
+      </div>
+      <div>
+        <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 8px; color: var(--white);">Jason Yang</h3>
+        <p style="font-size: 18px; opacity: 0.6; margin-bottom: 28px;">Senior Full-Stack Engineer (ClassSwift Backend)</p>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--primary-light); font-size: 20px;">✓</span>
+            <span style="font-size: 20px;">專注前後端開發、Agentic Coding</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--primary-light); font-size: 20px;">✓</span>
+            <span style="font-size: 20px;">規格驅動開發（Spec-Driven Development）實踐者</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--primary-light); font-size: 20px;">✓</span>
+            <div>
+              <span style="font-size: 20px;">iThome 鐵人賽參賽者</span>
+              <p style="font-size: 14px; opacity: 0.5; margin-top: 2px;">AI-Driven Development 實戰篇：30 天 Side Project 開發全紀錄（佳作）</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--primary-light); font-size: 20px;">✓</span>
+            <div>
+              <span style="font-size: 20px;">Hello World Dev 2025 講者</span>
+              <p style="font-size: 14px; opacity: 0.5; margin-top: 2px;">不是用 AI，而是和 AI 一起工作：一場來自開發現場的 AI 流程導入</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--primary-light); font-size: 20px;">✓</span>
+            <div>
+              <span style="font-size: 20px;">JSDC 2025 講者</span>
+              <p style="font-size: 14px; opacity: 0.5; margin-top: 2px;">打造多視窗跨平台應用：一個基於 Electron + React 的企業實戰案例</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P2: Hook — 共感痛點 ==================== -->
+<div class="slide bg-accent-gradient" id="slide-2">
+  <div class="big-text" style="margin-bottom: 48px;">
+    你一天花多少時間<br>在<span class="highlight">「應該有人幫你做」</span><br>的事情上？
+  </div>
+  <div class="grid-3" style="max-width: 900px;">
+    <div class="card-dark" style="text-align:center;">
+      <div style="font-size:32px; margin-bottom:12px;">👨‍💻</div>
+      <div style="font-size:16px; font-weight:600; margin-bottom:8px;">工程師</div>
+      <div style="font-size:15px; opacity:0.7;">寫 boilerplate<br>查文件、改格式</div>
+    </div>
+    <div class="card-dark" style="text-align:center;">
+      <div style="font-size:32px; margin-bottom:12px;">📋</div>
+      <div style="font-size:16px; font-weight:600; margin-bottom:8px;">PM</div>
+      <div style="font-size:15px; opacity:0.7;">整理會議記錄<br>彙整報告、追進度</div>
+    </div>
+    <div class="card-dark" style="text-align:center;">
+      <div style="font-size:32px; margin-bottom:12px;">🎨</div>
+      <div style="font-size:16px; font-weight:600; margin-bottom:8px;">設計師</div>
+      <div style="font-size:15px; opacity:0.7;">整理 spec<br>找元件文件</div>
+    </div>
+  </div>
+  <p style="margin-top:36px; font-size:24px; opacity:0.8;">這些事不難，但吃掉你的時間。</p>
+</div>
+
+<!-- ==================== P3: 反轉 ==================== -->
+<div class="slide bg-gradient" id="slide-3">
+  <div class="big-text" style="margin-bottom: 40px;">
+    如果有個 AI<br>你跟它說一句話<br><span class="highlight">它就去做了？</span>
+  </div>
+  <ul class="emphasis-list" style="max-width: 700px;">
+    <li>不是只會聊天</li>
+    <li>不是只會補代碼</li>
+    <li>是真的幫你做事 — 讀資料、規劃、執行、回報</li>
+  </ul>
+  <p class="quote" style="margin-top: 40px; font-size: 24px; font-style: normal; opacity: 0.85;">
+    今天帶你認識 Claude 的完整生態系<br>不管你是不是工程師，都有東西帶走。
+  </p>
+</div>
+
+<!-- ==================== P4: Claude 使用程度調查 ==================== -->
+<div class="slide bg-dark" id="slide-4">
+  <div class="slide-title" style="text-align:center; margin-bottom: 40px;">
+    公司買了 Claude — 你用到哪裡了？ <span class="badge badge-all">全員適用</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; width: 100%;">
+    <div class="card-dark" style="text-align: center; padding: 28px;">
+      <div style="font-size: 48px; margin-bottom: 12px;">🙋</div>
+      <div style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">有用過 Claude？</div>
+      <div style="font-size: 16px; opacity: 0.6;">不管是哪個產品</div>
+    </div>
+    <div class="card-dark" style="text-align: center; padding: 28px;">
+      <div style="font-size: 48px; margin-bottom: 12px;">📅</div>
+      <div style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">每天都在用？</div>
+      <div style="font-size: 16px; opacity: 0.6;">已經變成日常工具</div>
+    </div>
+  </div>
+  <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 900px; width: 100%;">
+    <div class="card-dark" style="text-align: center; padding: 20px;">
+      <div style="font-size: 28px; margin-bottom: 8px;">💬</div>
+      <div style="font-size: 18px; font-weight: 600;">Chat</div>
+      <div style="font-size: 14px; opacity: 0.5; margin-top: 4px;">claude.ai 聊天</div>
+    </div>
+    <div class="card-dark" style="text-align: center; padding: 20px;">
+      <div style="font-size: 28px; margin-bottom: 8px;">📱</div>
+      <div style="font-size: 18px; font-weight: 600;">Channels</div>
+      <div style="font-size: 14px; opacity: 0.5; margin-top: 4px;">TG / Discord</div>
+    </div>
+    <div class="card-dark" style="text-align: center; padding: 20px;">
+      <div style="font-size: 28px; margin-bottom: 8px;">⌨️</div>
+      <div style="font-size: 18px; font-weight: 600;">Code</div>
+      <div style="font-size: 14px; opacity: 0.5; margin-top: 4px;">Terminal CLI</div>
+    </div>
+    <div class="card-dark" style="text-align: center; padding: 20px;">
+      <div style="font-size: 28px; margin-bottom: 8px;">🖥️</div>
+      <div style="font-size: 18px; font-weight: 600;">Cowork</div>
+      <div style="font-size: 14px; opacity: 0.5; margin-top: 4px;">桌面 Agent</div>
+    </div>
+  </div>
+  <p style="margin-top: 32px; font-size: 20px; opacity: 0.7; text-align: center;">
+    今天帶你把 Claude 的完整生態系都摸一遍
+  </p>
+</div>
+
+<!-- ==================== P5: Claude 生態系 ==================== -->
+<div class="slide bg-light" id="slide-5">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label">Claude Ecosystem</div>
+    <h2 class="slide-title">Claude 不只是聊天機器人 <span class="badge badge-all">全員適用</span></h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="images/slide-p05-ecosystem.png" alt="Claude 生態系" style="max-width: 520px; max-height: 52vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+    </div>
+    <p style="font-size: 20px; color: var(--text-muted);">
+      大部分人停在 Chat，但真正的跳躍在 <span class="highlight-green">Cowork</span> 和 <span class="highlight-green">Code</span>
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P6: Chat vs Agentic ==================== -->
+<div class="slide bg-white" id="slide-6">
+  <div class="content-wrap">
+    <div class="section-label">Key Concept</div>
+    <h2 class="slide-title">Chat vs Agentic 的跳躍 <span class="badge badge-all">全員適用</span></h2>
+    <div class="vs-layout">
+      <div class="card" style="text-align: center;">
+        <h3 style="color: var(--text-muted); font-size: 20px; margin-bottom: 16px;">Chat 模式</h3>
+        <p style="font-size: 18px; margin-bottom: 12px;"><strong>你做什麼：</strong>問問題</p>
+        <p style="font-size: 18px; margin-bottom: 12px;"><strong>AI 做什麼：</strong>回答</p>
+        <div class="code-block" style="font-size: 14px; margin-top: 16px;">
+          「幫我翻譯這段」
+        </div>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="card" style="text-align: center; border-color: var(--primary-light); border-width: 2px;">
+        <h3 style="color: var(--primary); font-size: 20px; margin-bottom: 16px;">Agentic 模式</h3>
+        <p style="font-size: 18px; margin-bottom: 12px;"><strong>你做什麼：</strong>給目標</p>
+        <p style="font-size: 18px; margin-bottom: 12px;"><strong>AI 做什麼：</strong>規劃 + 執行 + 回報</p>
+        <div class="code-block" style="font-size: 14px; margin-top: 16px;">
+          「把這 20 個文件翻成中文<br>統一術語，存到資料夾」
+        </div>
+      </div>
+    </div>
+    <p style="text-align: center; margin-top: 32px; font-size: 22px; color: var(--text-muted);">
+      今天的關鍵字：<span class="highlight-green">你怎麼讓 AI 幫你做事</span>
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P7: Section Divider ==================== -->
+<div class="slide bg-dark section-divider" id="slide-7">
+  <div class="section-label" style="color: var(--accent);">Section 01</div>
+  <h1 class="slide-title">非工程師也能用的<br>AI 工作術</h1>
+  <p style="font-size: 22px; opacity: 0.6; margin-top: 16px;">
+    <span class="badge badge-pm">PM/設計師</span> <span class="badge badge-all">全員適用</span>
+  </p>
+</div>
+
+<!-- ==================== P8: 場景一 — 文件與報告 ==================== -->
+<div class="slide bg-light" id="slide-8">
+  <div class="content-wrap">
+    <div class="section-label">場景一</div>
+    <h2 class="slide-title">文件與報告 <span class="badge badge-pm">PM/設計師</span></h2>
+    <div class="image-left-layout">
+      <div class="image-side">
+        <img src="images/slide-p08-documents.png" alt="文件處理流程圖" class="slide-image-large">
+      </div>
+      <div class="text-side">
+        <ul class="bullet-list">
+          <li>會議記錄 → Action Items</li>
+          <li>長文件摘要（100 頁 PDF → 重點）</li>
+          <li>週報 / 月報產出</li>
+          <li>email 草稿</li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 20px; font-weight: 600; color: #92400e;">
+            你不用學程式<br>只要會描述你要什麼
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 場景一範例：User Story 撰寫 ==================== -->
+<div class="slide bg-white" id="slide-8b-user-story">
+  <div class="content-wrap">
+    <div class="section-label">場景一 — 實際範例</div>
+    <h2 class="slide-title">用 Claude 寫 User Story <span class="badge badge-pm">PM</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">你跟 Claude 說：</p>
+        <div class="code-block" style="font-size: 15px; margin-bottom: 20px;">
+          我們要做一個「課堂出席報告」功能。<br>
+          老師上完課後可以看到哪些學生有出席，<br>
+          缺席的要自動寄通知給家長。<br><br>
+          幫我寫成 User Story，<br>
+          包含 Acceptance Criteria。
+        </div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 16px; color: #92400e; line-height: 1.6;">
+            <strong>重點：</strong>你只要用白話文描述需求，<br>
+            Claude 幫你整理成結構化的 User Story
+          </p>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Claude 產出：</p>
+        <div class="code-block" style="font-size: 13px;">
+          <span style="color: #fbbf24;">## User Story</span><br><br>
+          <span style="color: #7dd3fc;">As a</span> 老師<br>
+          <span style="color: #7dd3fc;">I want to</span> 課後查看出席報告<br>
+          <span style="color: #7dd3fc;">So that</span> 掌握學生出席狀況<br><br>
+          <span style="color: #fbbf24;">## Acceptance Criteria</span><br><br>
+          <span style="color: #6ee7b7;">✓</span> 課堂結束後自動生成出席清單<br>
+          <span style="color: #6ee7b7;">✓</span> 顯示出席/缺席/遲到狀態<br>
+          <span style="color: #6ee7b7;">✓</span> 缺席學生自動寄 email 通知家長<br>
+          <span style="color: #6ee7b7;">✓</span> 老師可手動調整出席狀態<br>
+          <span style="color: #6ee7b7;">✓</span> 報告可匯出為 PDF
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P9: 場景二 — 資料分析 ==================== -->
+<div class="slide bg-white" id="slide-9">
+  <div class="content-wrap">
+    <div class="section-label">場景二</div>
+    <h2 class="slide-title">資料分析與整理 <span class="badge badge-pm">PM/設計師</span></h2>
+    <div class="image-left-layout">
+      <div class="image-side">
+        <img src="images/slide-p09-data-analysis.png" alt="資料分析場景圖" class="slide-image-large">
+      </div>
+      <div class="text-side">
+        <ul class="bullet-list">
+          <li>CSV / Excel 分析：「有什麼異常？」</li>
+          <li>資料格式轉換</li>
+          <li>趨勢歸納</li>
+          <li>交叉比對</li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #ede9fe; border-color: #ddd6fe;">
+          <p style="font-size: 20px; font-weight: 600; color: #5b21b6;">
+            AI 最擅長：<br>讀大量資料 → 找 pattern → 白話文告訴你
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 場景二範例：問卷分析 ==================== -->
+<div class="slide bg-light" id="slide-9b-survey">
+  <div class="content-wrap">
+    <div class="section-label">場景二 — 實際範例</div>
+    <h2 class="slide-title">用 Claude 分析問卷結果 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">你跟 Claude 說：</p>
+        <div class="code-block" style="font-size: 15px; margin-bottom: 20px;">
+          這是我們分享會的問卷結果 CSV，<br>
+          幫我分析：<br><br>
+          1. 大家最想聽什麼主題？<br>
+          2. 工程師和非工程師的需求差異<br>
+          3. 建議的演講大綱
+        </div>
+        <div class="card" style="background: #ede9fe; border-color: #ddd6fe;">
+          <p style="font-size: 16px; color: #5b21b6; line-height: 1.6;">
+            <strong>這就是今天的真實案例：</strong><br>
+            你們填的問卷，我丟給 Claude，<br>
+            它幫我分析出今天該講什麼
+          </p>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Claude 產出：</p>
+        <div class="code-block" style="font-size: 13px;">
+          <span style="color: #fbbf24;">## 問卷分析結果</span><br><br>
+          <span style="color: #7dd3fc;">需求排名：</span><br>
+          1. 程式開發輔助 — <span style="color: #fbbf24;">25 票</span>（最高）<br>
+          2. 工作效率應用 — <span style="color: #6ee7b7;">20 票</span><br>
+          3. 資料分析整理 — <span style="color: #6ee7b7;">20 票</span><br>
+          4. Prompt 撰寫技巧 — 17 票<br>
+          5. 基本操作介面 — 11 票<br><br>
+          <span style="color: #7dd3fc;">建議：</span><br>
+          非工程師佔多數，建議先講通用場景，<br>
+          再給工程師加料。Skill / Plugin 當<br>
+          轉場橋樑，連接兩個受眾群。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P10: 場景三 — 讓 AI 理解你的工作 ==================== -->
+<div class="slide bg-light" id="slide-10">
+  <div class="content-wrap">
+    <div class="section-label">場景三</div>
+    <h2 class="slide-title">讓 AI 理解你的工作 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div class="card" style="border-color: #fecaca; background: #fff5f5;">
+        <h3 style="color: #dc2626; font-size: 20px; margin-bottom: 16px;">Before — 每次重新解釋</h3>
+        <div class="code-block" style="font-size: 14px;">
+          「我是 PM，負責 X 產品...」<br>
+          「格式要用 Markdown...」<br>
+          「專有名詞翻譯表是...」<br>
+          <span style="color: #ef4444;">（每次對話都要講一遍）</span>
+        </div>
+      </div>
+      <div class="card" style="border-color: var(--border); background: #f0fdf4;">
+        <h3 style="color: var(--primary); font-size: 20px; margin-bottom: 16px;">After — AI 已經知道</h3>
+        <div class="code-block" style="font-size: 14px;">
+          「幫我寫這週週報」<br><br>
+          <span style="color: var(--primary-light);">AI 已知你的角色、格式、產品背景</span><br>
+          <span style="color: var(--primary-light);">→ 直接進正題</span>
+        </div>
+      </div>
+    </div>
+    <p style="text-align: center; margin-top: 28px; font-size: 22px;">
+      三種做法：<span class="highlight-green">Projects</span> / <span class="highlight-green">Custom Instructions</span> / <span class="highlight-green">CLAUDE.md</span>
+    </p>
+    <p style="text-align: center; margin-top: 8px; font-size: 20px; color: var(--text-muted);">
+      讓 AI 記住你是誰，是效率翻倍的第一步 — 接下來一頁一頁看
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P11: Projects（Claude Chat 版） ==================== -->
+<div class="slide bg-white" id="slide-11">
+  <div class="content-wrap">
+    <div class="section-label">解法 1 / 3</div>
+    <h2 class="slide-title">Projects — 把資料組織起來 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div>
+        <ul class="bullet-list">
+          <li><strong>在 Claude Chat 網頁版</strong>建立 Project</li>
+          <li>上傳常用文件（SOP、格式範本、產品 spec）</li>
+          <li>每次新對話自動帶入這些知識</li>
+          <li>像是幫 AI 準備好一個<span class="highlight-green">專案資料夾</span></li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 18px; font-weight: 600; color: #92400e;">
+            適合放什麼？
+          </p>
+          <p style="font-size: 16px; color: #92400e; line-height: 1.7; margin-top: 8px;">
+            角色描述、格式範本、常用指令、<br>產品文件、術語表
+          </p>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="border-color: var(--primary-light);">
+          <h3 style="color: var(--primary); font-size: 18px; margin-bottom: 16px;">建立步驟</h3>
+          <div style="font-size: 17px; line-height: 2;">
+            <strong>1.</strong> 開 claude.ai → 左側 Projects<br>
+            <strong>2.</strong> 新增 Project，取名字<br>
+            <strong>3.</strong> 上傳文件 / 寫 Project Instructions<br>
+            <strong>4.</strong> 在 Project 裡開新對話<br>
+            <strong>5.</strong> AI 自動讀取所有素材
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P12: Custom Instructions ==================== -->
+<div class="slide bg-light" id="slide-12">
+  <div class="content-wrap">
+    <div class="section-label">解法 2 / 3</div>
+    <h2 class="slide-title">Custom Instructions — 告訴 AI 你是誰 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div>
+        <ul class="bullet-list">
+          <li>在 Claude Chat <strong>設定</strong>中撰寫</li>
+          <li>每次對話<strong>自動套用</strong>（不用手動貼）</li>
+          <li>跟 ChatGPT 的 Custom Instructions 同概念</li>
+          <li>適合寫<span class="highlight-green">跨專案通用</span>的偏好</li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #ede9fe; border-color: #ddd6fe;">
+          <p style="font-size: 17px; font-weight: 600; color: #5b21b6;">
+            Projects = 專案級記憶<br>
+            Custom Instructions = 全域級記憶
+          </p>
+        </div>
+      </div>
+      <div>
+        <div class="code-block" style="font-size: 15px;">
+          <span style="color: #7dd3fc;">// Custom Instructions 範例</span><br><br>
+          <span style="color: #fbbf24;">角色：</span>我是產品經理，負責 B2B SaaS<br><br>
+          <span style="color: #fbbf24;">語言：</span>用繁體中文回覆<br><br>
+          <span style="color: #fbbf24;">風格：</span>簡潔、條列式、<br>
+          &nbsp;&nbsp;避免「值得注意的是」等套話<br><br>
+          <span style="color: #fbbf24;">格式：</span>表格優先、<br>
+          &nbsp;&nbsp;Markdown 格式、附行動建議
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P13: CLAUDE.md 深入 ==================== -->
+<div class="slide bg-white" id="slide-13">
+  <div class="content-wrap">
+    <div class="section-label">解法 3 / 3</div>
+    <h2 class="slide-title">CLAUDE.md — 工程師的終極記憶 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 19px; line-height: 1.7; margin-bottom: 16px;">
+          Claude Code 每次啟動<strong>自動讀取</strong>的備忘錄。<br>
+          分層設計，按需載入：
+        </p>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 12px;">
+          <span style="color: #7dd3fc;"># CLAUDE.md — Layer 0（always loaded）</span><br>
+          <span style="color: #fbbf24;">Tech Stack:</span> Python / Poetry<br>
+          <span style="color: #fbbf24;">Core Resources:</span><br>
+          &nbsp;&nbsp;Constitution / AI Knowledge / Conventions<br>
+          <span style="color: #fbbf24;">Available Skills:</span><br>
+          &nbsp;&nbsp;/prospec-plan, /prospec-verify ...<br>
+          <span style="color: #fbbf24;">Working with This Project:</span><br>
+          &nbsp;&nbsp;1. 讀 Constitution → 2. 查 Knowledge<br>
+          &nbsp;&nbsp;3. 遵循 Conventions → 4. 用 Skills
+        </div>
+        <div class="code-block" style="font-size: 13px;">
+          <span style="color: #7dd3fc;"># CLAUDE.local.md — 個人偏好（不 commit）</span><br>
+          永遠用中文回我<br>
+          commit message 不要有 AI 協作訊息
+        </div>
+      </div>
+      <div>
+        <table class="slide-table" style="font-size: 16px;">
+          <thead>
+            <tr><th>該放</th><th>不該放</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Claude 猜不到的指令</td><td>讀 code 就能知道的事</td></tr>
+            <tr><td>非標準的 code style</td><td>標準語言慣例</td></tr>
+            <tr><td>測試指令和偏好</td><td>詳細 API 文件</td></tr>
+            <tr><td>repo 慣例</td><td>經常變動的資訊</td></tr>
+            <tr><td>常見地雷</td><td>「寫乾淨的 code」</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P14: 真實工作流範例 ==================== -->
+<div class="slide bg-light" id="slide-14">
+  <div class="content-wrap">
+    <div class="section-label">Real Workflows</div>
+    <h2 class="slide-title">GWS — Google Workspace + Claude Code <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="font-size: 18px; color: var(--primary); margin-bottom: 12px;">每日站會準備</h3>
+        <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted);">
+          <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">/gws-workflow-standup-report</span><br>
+          今日會議 + 待辦事項<br>
+          自動整合 Calendar + Tasks
+        </p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: 18px; color: var(--primary); margin-bottom: 12px;">Email 分類回覆</h3>
+        <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted);">
+          <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">/gws-gmail-triage</span> 看未讀摘要<br>
+          <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">/gws-gmail-reply</span> 自動回覆<br>
+          處理 threading，不會寄錯
+        </p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: 18px; color: var(--primary); margin-bottom: 12px;">會前準備</h3>
+        <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted);">
+          <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">/gws-workflow-meeting-prep</span><br>
+          議程 + 出席者 + 相關文件<br>
+          一鍵搞定會前功課
+        </p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: 18px; color: var(--primary); margin-bottom: 12px;">每週摘要</h3>
+        <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted);">
+          <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">/gws-workflow-weekly-digest</span><br>
+          本週會議 + 未讀信件數<br>
+          Claude Code 不只能寫程式
+        </p>
+      </div>
+    </div>
+    <p style="text-align: center; margin-top: 20px; font-size: 18px; color: var(--text-muted);">
+      Gmail、Calendar、Tasks — Claude Code 直接操作你的 Google Workspace
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P15: Section Divider ==================== -->
+<div class="slide bg-dark section-divider" id="slide-15">
+  <div class="section-label" style="color: var(--accent);">Section 02</div>
+  <h1 class="slide-title">Skills & Plugins<br>讓 AI 變專家</h1>
+  <p style="font-size: 22px; opacity: 0.6; margin-top: 16px;">
+    <span class="badge badge-all">全員適用</span>
+  </p>
+</div>
+
+<!-- ==================== P16: 為什麼你的 AI 像 junior？ ==================== -->
+<div class="slide bg-white" id="slide-16">
+  <div class="content-wrap">
+    <h2 class="slide-title">為什麼你的 AI 像 junior？ <span class="badge badge-all">全員適用</span></h2>
+    <div class="quote" style="margin: 0 auto 36px;">
+      AI 什麼都會一點，但什麼都不夠專業？
+    </div>
+    <div class="grid-2" style="max-width: 900px; margin: 0 auto;">
+      <div class="card">
+        <h3 style="color: #dc2626; font-size: 20px; margin-bottom: 16px;">問題</h3>
+        <ul class="bullet-list">
+          <li>AI 是通才，你需要專才</li>
+          <li>不知道你的 SOP、格式、習慣</li>
+          <li>每次重新教，教了不一定記</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color: var(--primary-light);">
+        <h3 style="color: var(--primary); font-size: 20px; margin-bottom: 16px;">解法</h3>
+        <p style="font-size: 20px; line-height: 1.8;">
+          <span class="highlight-green">Skills</span> — 把你的知識裝進 AI<br>
+          <span class="highlight-green">Plugins</span> — 把你的工具接上 AI
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P17: Skills — 概念與安裝 ==================== -->
+<div class="slide bg-light" id="slide-17">
+  <div class="content-wrap">
+    <div class="section-label">Skills</div>
+    <h2 class="slide-title">Skill = AI 的標準作業程序 <span class="badge badge-all">全員適用</span></h2>
+    <div class="image-left-layout">
+      <div class="image-side">
+        <img src="images/slide-p13-skills.png" alt="Skill 前後對比" class="slide-image-large">
+      </div>
+      <div class="text-side">
+        <div class="card" style="margin-bottom: 16px; border-color: #fecaca; background: #fff5f5;">
+          <h3 style="color: #dc2626; font-size: 18px; margin-bottom: 8px;">不用 Skill</h3>
+          <p style="font-size: 16px; line-height: 1.5;">每次結果不同，要講很多前提</p>
+        </div>
+        <div class="card" style="margin-bottom: 16px; border-color: var(--border); background: #f0fdf4;">
+          <h3 style="color: var(--primary); font-size: 18px; margin-bottom: 8px;">用 Skill</h3>
+          <p style="font-size: 16px; line-height: 1.5;">按同一流程，前提都寫好了</p>
+        </div>
+        <p style="font-size: 17px; color: var(--text-muted); margin-bottom: 12px;">
+          <strong>兩種取得方式：</strong>
+        </p>
+        <ul class="bullet-list" style="font-size: 17px;">
+          <li>從 GitHub 安裝現成 Skill</li>
+          <li>用 <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">Skill Creator</span> 自己寫</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P18: Skill 真實範例 ==================== -->
+<div class="slide bg-white" id="slide-18">
+  <div class="content-wrap">
+    <div class="section-label">Skill Example</div>
+    <h2 class="slide-title">真實工作中的 Command 範例 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <div class="code-block" style="font-size: 14px;">
+          <span style="color: #7dd3fc;"># 內建 /review — PR Code Review</span><br>
+          <span style="color: #64748B;">Claude Code 自動：</span><br>
+          1. 跑 <span style="color: #6ee7b7;">gh pr diff</span> 取得 diff<br>
+          2. 分析程式碼品質和風格<br>
+          3. 檢查安全性和效能<br>
+          4. 產出結構化 review 報告
+        </div>
+        <p style="margin-top: 16px; font-size: 16px; color: var(--text-muted);">
+          一個指令完成整個 Code Review 流程
+        </p>
+      </div>
+      <div>
+        <div class="code-block" style="font-size: 14px; margin-bottom: 16px;">
+          <span style="color: #7dd3fc;"># .claude/commands/commit.md</span><br>
+          <span style="color: #fbbf24;">---</span><br>
+          <span style="color: #fbbf24;">description:</span> 自動化 commit<br>
+          <span style="color: #fbbf24;">model:</span> sonnet<br>
+          <span style="color: #fbbf24;">---</span><br><br>
+          <span style="color: #7dd3fc;"># 自動執行</span><br>
+          1. 分析 git diff<br>
+          2. 判斷是否拆分 commits<br>
+          3. Conventional commit + emoji<br>
+          <span style="color: #fbbf24;">例：✨ feat: add OAuth login</span>
+        </div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 17px; font-weight: 600; color: #92400e;">
+            Skills 不是越多越好<br>
+            <span style="font-weight: 400; font-size: 15px;">品質參差不齊的 Skills 會讓 AI 花更多時間篩選<br>只保留少量優質、架構清晰的就好</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Skill 架構圖 ==================== -->
+<div class="slide bg-white" id="slide-skill-arch-image">
+  <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+    <h2 class="slide-title">Skill 的三層架構 <span class="badge badge-all">全員適用</span></h2>
+    <img src="images/slide-p19-skill-architecture.png" alt="Skill 三層架構" style="max-width: 600px; max-height: 68vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+  </div>
+</div>
+
+<!-- ==================== Skill 架構文字版 ==================== -->
+<div class="slide bg-white" id="slide-19-skill-arch">
+  <div class="content-wrap">
+    <div class="section-label">Skill Architecture</div>
+    <h2 class="slide-title">Skill 的三層架構 — Progressive Disclosure <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 16px;">三層載入機制：</p>
+        <div class="card" style="background: #f5f3ff; border-color: #E9D5FF; margin-bottom: 12px; padding: 14px 18px;">
+          <p style="font-size: 15px; line-height: 1.6;">
+            <strong style="color: #7c3aed;">Level 1: Metadata</strong><br>
+            <span style="color: var(--text-muted);">永遠在 context 中 — name + description (~100 words)</span>
+          </p>
+        </div>
+        <div class="card" style="background: #ecfdf5; border-color: #A7F3D0; margin-bottom: 12px; padding: 14px 18px;">
+          <p style="font-size: 15px; line-height: 1.6;">
+            <strong style="color: #059669;">Level 2: SKILL.md Body</strong><br>
+            <span style="color: var(--text-muted);">Skill 觸發時載入 — 完整指令 (~500 lines)</span>
+          </p>
+        </div>
+        <div class="card" style="background: #eff6ff; border-color: #BFDBFE; margin-bottom: 12px; padding: 14px 18px;">
+          <p style="font-size: 15px; line-height: 1.6;">
+            <strong style="color: #2563eb;">Level 3: Bundled Resources</strong><br>
+            <span style="color: var(--text-muted);">按需載入 — scripts/ references/ assets/ (無限)</span>
+          </p>
+        </div>
+        <div class="code-block" style="font-size: 13px; margin-top: 16px;">
+          <span style="color: #7dd3fc;">my-skill/</span><br>
+          ├── <span style="color: #fbbf24;">SKILL.md</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748B;">← 主要指令（必需）</span><br>
+          ├── <span style="color: #6ee7b7;">references/</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748B;">← 詳細文件（按需載入）</span><br>
+          ├── <span style="color: #6ee7b7;">examples/</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748B;">← 範例輸出</span><br>
+          └── <span style="color: #6ee7b7;">scripts/</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748B;">← 可執行腳本</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 16px;">SKILL.md 結構：</p>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 16px;">
+          <span style="color: #fbbf24;">---</span><br>
+          <span style="color: #fbbf24;">name:</span> explain-code<br>
+          <span style="color: #fbbf24;">description:</span> 用圖表和類比解釋程式碼<br>
+          <span style="color: #fbbf24;">disable-model-invocation:</span> true<br>
+          <span style="color: #fbbf24;">allowed-tools:</span> Read Grep Glob<br>
+          <span style="color: #fbbf24;">model:</span> sonnet<br>
+          <span style="color: #fbbf24;">context:</span> fork<br>
+          <span style="color: #fbbf24;">---</span><br><br>
+          <span style="color: #7dd3fc;"># 指令內容</span><br>
+          1. 先用類比解釋<br>
+          2. 畫 ASCII 圖<br>
+          3. 逐步走過程式碼<br>
+          4. 提醒常見陷阱
+        </div>
+        <p style="font-size: 17px; font-weight: 600; margin-bottom: 12px;">Frontmatter 關鍵欄位：</p>
+        <ul class="bullet-list" style="font-size: 15px;">
+          <li><code>description</code> — Claude 決定何時觸發的依據（最重要！）</li>
+          <li><code>disable-model-invocation: true</code> — 只有你能觸發</li>
+          <li><code>allowed-tools</code> — 限制可用工具（唯讀：Read Grep Glob）</li>
+          <li><code>context: fork</code> — 在獨立 subagent 中執行</li>
+          <li><code>model</code> — 指定模型（sonnet 省成本）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Skill Creator 圖 ==================== -->
+<div class="slide bg-light" id="slide-skill-creator-image">
+  <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+    <h2 class="slide-title">Skill Creator — Eval 驅動開發 <span class="badge badge-all">全員適用</span></h2>
+    <img src="images/slide-p20-skill-creator.png" alt="Skill Creator" style="max-width: 600px; max-height: 68vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+  </div>
+</div>
+
+<!-- ==================== Skill Creator 文字版 ==================== -->
+<div class="slide bg-light" id="slide-20-skill-creator">
+  <div class="content-wrap">
+    <div class="section-label">Skill Creator</div>
+    <h2 class="slide-title">Skill Creator — 用 Eval 驅動的 Skill 開發 <span class="badge badge-all">全員適用</span></h2>
+    <p style="font-size: 17px; font-weight: 600; margin-bottom: 16px;">四個模式：</p>
+    <div class="grid-4" style="margin-bottom: 20px;">
+      <div class="card" style="background: #fffbeb; border-color: #FDE68A; padding: 16px;">
+        <p style="font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 8px;">1. Create</p>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">捕捉意圖 → 訪談<br>→ 寫 SKILL.md<br>→ 建測試案例</p>
+      </div>
+      <div class="card" style="background: #ecfdf5; border-color: #A7F3D0; padding: 16px;">
+        <p style="font-size: 16px; font-weight: 700; color: #065f46; margin-bottom: 8px;">2. Eval</p>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">四個 sub-agent 平行：<br>Executor・Grader<br>Comparator・Analyzer</p>
+      </div>
+      <div class="card" style="background: #eff6ff; border-color: #BFDBFE; padding: 16px;">
+        <p style="font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 8px;">3. Improve</p>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">根據回饋迭代：<br>不要 overfit<br>保持精簡・解釋 why</p>
+      </div>
+      <div class="card" style="background: #f5f3ff; border-color: #E9D5FF; padding: 16px;">
+        <p style="font-size: 16px; font-weight: 700; color: #5b21b6; margin-bottom: 8px;">4. Benchmark</p>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">生成 HTML 報告<br>比較 with-skill<br>vs baseline</p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div>
+        <p style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Description 是觸發的關鍵：</p>
+        <div class="card" style="background: #fef2f2; border-color: #fecaca; padding: 14px 18px; margin-bottom: 10px;">
+          <p style="font-size: 14px; line-height: 1.5;">
+            <strong style="color: #dc2626;">Bad:</strong> "How to build a dashboard"
+          </p>
+        </div>
+        <div class="card" style="background: #f0fdf4; border-color: #bbf7d0; padding: 14px 18px;">
+          <p style="font-size: 14px; line-height: 1.5;">
+            <strong style="color: #16a34a;">Good:</strong> "How to build a dashboard to display internal data. Use when user mentions dashboards, data visualization, internal metrics — even if they don't explicitly ask for a 'dashboard.'"
+          </p>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Eval Pipeline 流程：</p>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 12px;">
+          生成測試 → 執行（with-skill + baseline）<br>
+          &nbsp;&nbsp;→ 評分 → 聚合 → 分析 → 開 Viewer<br>
+          &nbsp;&nbsp;→ 讀回饋 → 改進 → 重跑
+        </div>
+        <div class="card" style="background: #fffbeb; border-color: #fde68a; padding: 14px 18px;">
+          <p style="font-size: 15px; line-height: 1.7; color: #92400e;">
+            <strong>迭代原則：</strong><br>
+            「從回饋中歸納，不要 overfit 到測試案例」<br>
+            「移除沒用的部分 — 看 transcript 找浪費」<br>
+            「解釋 why，不要用 ALWAYS/NEVER」
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P19: MCP 概念 ==================== -->
+<div class="slide bg-light" id="slide-19">
+  <div class="content-wrap">
+    <div class="section-label">Plugins / MCP</div>
+    <h2 class="slide-title">MCP = AI 的 USB 連接線 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2" style="margin-bottom: 28px;">
+      <div>
+        <ul class="bullet-list">
+          <li><strong>Model Context Protocol</strong> — Anthropic 推出的開放標準</li>
+          <li>讓 AI 透過統一介面連接外部工具</li>
+          <li>OpenAI、Google DeepMind 都已採用</li>
+          <li>社群已建立 <span class="highlight-green">400+ MCP Servers</span></li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #ede9fe; border-color: #ddd6fe;">
+          <p style="font-size: 17px; color: #5b21b6; line-height: 1.7;">
+            <strong>一般版</strong> = Plugins（Chat/Cowork 介面安裝）<br>
+            <strong>工程師版</strong> = MCP Servers（設定檔配置）<br>
+            本質是同一套協定
+          </p>
+        </div>
+      </div>
+      <div>
+        <div class="grid-3" style="gap: 12px; max-width: 100%;">
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📁</div>
+            <p style="font-size: 14px; font-weight: 600;">資料連接</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Notion<br>Google Drive</p>
+          </div>
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">🔧</div>
+            <p style="font-size: 14px; font-weight: 600;">工具操作</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Gmail<br>Calendar</p>
+          </div>
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">🧠</div>
+            <p style="font-size: 14px; font-weight: 600;">專業能力</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Playwright<br>瀏覽器</p>
+          </div>
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+            <p style="font-size: 14px; font-weight: 600;">搜尋</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Context7<br>Firecrawl</p>
+          </div>
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">💾</div>
+            <p style="font-size: 14px; font-weight: 600;">資料庫</p>
+            <p style="font-size: 13px; color: var(--text-muted);">PostgreSQL<br>Supabase</p>
+          </div>
+          <div class="card" style="text-align: center; padding: 16px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+            <p style="font-size: 14px; font-weight: 600;">專案管理</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Jira<br>Confluence</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P20: MCP 設定範例 ==================== -->
+<div class="slide bg-white" id="slide-20">
+  <div class="content-wrap">
+    <div class="section-label">MCP Config</div>
+    <h2 class="slide-title">MCP 怎麼設定 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 18px; margin-bottom: 16px;">真實專案的 <span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">.mcp.json</span>：</p>
+        <div class="code-block" style="font-size: 13px;">
+          {<br>
+          &nbsp;&nbsp;<span style="color: #7dd3fc;">"mcpServers"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #fbbf24;">"mcp-atlassian"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"command": "uvx",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"args": ["mcp-atlassian"],<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"env": {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"JIRA_URL": "https://*****.atlassian.net",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"JIRA_API_TOKEN": "***"<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;},<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #fbbf24;">"context7"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type": "http",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"url": "https://mcp.context7.com/mcp",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"headers": { "CONTEXT7_API_KEY": "***" }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+      </div>
+      <div>
+        <ul class="bullet-list">
+          <li><strong>mcp-atlassian</strong>：讀 Jira ticket、寫 Confluence 文件</li>
+          <li><strong>context7</strong>：查最新框架文檔</li>
+          <li><strong>GWS MCP</strong>：Gmail 透過 Claude AI 認證</li>
+          <li>安裝指令：<span style="font-family: 'JetBrains Mono';">claude mcp add</span></li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #f0fdf4; border-color: var(--border);">
+          <h3 style="color: var(--primary); font-size: 17px; margin-bottom: 12px;">MCP Tool Search（效能關鍵）</h3>
+          <p style="font-size: 16px; line-height: 1.6; color: var(--text-muted);">
+            MCP 工具不會啟動時全部載入<br>
+            只在需要時才載入 schema<br>
+            減少 context 使用高達 <strong>95%</strong><br>
+            → 可同時啟用大量 MCP servers
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Skill Demo: UI UX Pro Max 首頁 ==================== -->
+<div class="slide bg-dark" id="slide-skill-demo-1">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label" style="color: var(--accent);">Skill 實例</div>
+    <h2 class="slide-title">UI UX Pro Max — 63.8K Stars 的設計 Skill</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="images/ui-ux-pro-max-homepage.png" alt="UI UX Pro Max 首頁" style="max-width: 90%; max-height: 48vh; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);">
+    </div>
+    <p style="font-size: 18px; opacity: 0.8; margin-bottom: 16px;">
+      一個 Skill 就能讓 Claude 變成 UI/UX 設計專家
+    </p>
+    <div style="display: inline-flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+      <span class="badge badge-all">Claude Code</span>
+      <span class="badge badge-eng">Cursor</span>
+      <span class="badge badge-pm">Codex</span>
+      <span style="display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; background: rgba(255,255,255,0.15); color: white;">+ 6 種工具</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Skill Demo: UI UX Pro Max 說明圖 ==================== -->
+<div class="slide bg-light" id="slide-skill-demo-2">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label">Skill 實例</div>
+    <h2 class="slide-title">這個 Skill 裝了什麼？ <span class="badge badge-all">全員適用</span></h2>
+    <div class="image-left-layout">
+      <div class="image-side">
+        <img src="images/slide-skill-demo-uipro.png" alt="UI UX Pro Max 說明" class="slide-image-large">
+      </div>
+      <div class="text-side">
+        <div class="card" style="margin-bottom: 16px; background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 18px; font-weight: 600; color: #92400e;">
+            裝了 Skill 之後，Claude 就知道：
+          </p>
+          <ul class="bullet-list" style="margin-top: 12px;">
+            <li style="font-size: 16px;">怎麼選風格（50 種可選）</li>
+            <li style="font-size: 16px;">怎麼配色（21 組調色盤）</li>
+            <li style="font-size: 16px;">怎麼選字型（50 組配對）</li>
+            <li style="font-size: 16px;">怎麼做圖表（20 種類型）</li>
+          </ul>
+        </div>
+        <div class="card" style="background: #f0fdf4; border-color: var(--border);">
+          <p style="font-size: 16px; color: var(--primary); font-weight: 600; margin-bottom: 8px;">
+            💡 順帶一提
+          </p>
+          <p style="font-size: 16px; color: var(--text-muted); line-height: 1.6;">
+            今天這份投影片，就是用這個 Skill 產生的。<br>
+            同一個 Skill，不同的 prompt，不同的產出。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P21: 熱門 MCP Servers ==================== -->
+<div class="slide bg-light" id="slide-21">
+  <div class="content-wrap">
+    <div class="section-label">Popular MCP Servers</div>
+    <h2 class="slide-title">值得裝的 MCP Servers <span class="badge badge-eng">工程師</span></h2>
+    <table class="slide-table">
+      <thead>
+        <tr><th>類別</th><th>Server</th><th>做什麼</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>開發</td><td><strong>GitHub</strong></td><td>PR review、Issue 管理、搜尋 repo</td></tr>
+        <tr><td>搜尋</td><td><strong>Context7</strong></td><td>即時查詢最新程式庫文檔（取代過時訓練資料）</td></tr>
+        <tr><td>專案管理</td><td><strong>Notion / Linear</strong></td><td>需求文件、Issue tracking</td></tr>
+        <tr><td>瀏覽器</td><td><strong>Playwright</strong></td><td>瀏覽器自動化、E2E 測試</td></tr>
+        <tr><td>監控</td><td><strong>Sentry</strong></td><td>錯誤追蹤分析</td></tr>
+        <tr><td>辦公</td><td><strong>GWS MCP</strong></td><td>Gmail、Calendar、Drive — 操作 Google Workspace</td></tr>
+      </tbody>
+    </table>
+    <p style="text-align: center; margin-top: 20px; font-size: 18px; color: var(--text-muted);">
+      你給 AI 越多工具，它能做的事就越多 — 像新員工，<span class="highlight-green">給權限才能做事</span>
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P22: Section Divider ==================== -->
+<div class="slide bg-dark section-divider" id="slide-22">
+  <div class="section-label" style="color: var(--accent);">Section 03</div>
+  <h1 class="slide-title">工程師加料<br>Claude Code</h1>
+  <p style="font-size: 22px; opacity: 0.6; margin-top: 16px;">
+    <span class="badge badge-eng">工程師</span>
+  </p>
+</div>
+
+<!-- ==================== P23: Claude Code 是什麼 ==================== -->
+<div class="slide bg-light" id="slide-23">
+  <div class="content-wrap">
+    <div class="section-label">Claude Code</div>
+    <h2 class="slide-title">Claude Code 是什麼 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-3" style="margin-bottom: 28px;">
+      <div class="card" style="text-align: center;">
+        <div style="font-size: 36px; margin-bottom: 12px;">></div>
+        <h3 style="font-size: 18px; margin-bottom: 8px;">Terminal-native</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">在你的終端機裡跑<br>不綁定任何 IDE</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <div style="font-size: 36px; margin-bottom: 12px;">🔄</div>
+        <h3 style="font-size: 18px; margin-bottom: 8px;">Agentic</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">自主規劃、執行、修正<br>SWE-bench 80.8%</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <div style="font-size: 36px; margin-bottom: 12px;">🧩</div>
+        <h3 style="font-size: 18px; margin-bottom: 8px;">可擴充</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">Skills + MCP + Hooks<br>+ Commands + Agents</p>
+      </div>
+    </div>
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+      <table class="slide-table">
+        <thead>
+          <tr><th>概念</th><th>一般版</th><th>工程師版</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>知識裝載</td><td>Skills</td><td><strong>SKILL.md</strong></td></tr>
+          <tr><td>工具連接</td><td>Plugins</td><td><strong>MCP Servers</strong></td></tr>
+          <tr><td>記憶</td><td>Custom Instructions</td><td><strong>CLAUDE.md</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align: center; margin-top: 20px; font-size: 18px; color: var(--text-muted);">
+      跟前面講的是同一套概念，在工程師世界裡更強大
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P24: Plan Mode 獨立頁 ==================== -->
+<div class="slide bg-white" id="slide-24">
+  <div class="content-wrap">
+    <div class="section-label">Plan Mode</div>
+    <h2 class="slide-title">Plan Mode — 先看再動手 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <ul class="bullet-list">
+          <li><span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">Shift+Tab</span> 切換 Plan Mode</li>
+          <li><strong>只讀不改</strong> — 安全探索整個 codebase</li>
+          <li>AI 先理解架構，再提方案</li>
+          <li><span style="font-family: 'JetBrains Mono'; background: #f0fdf4; padding: 2px 8px; border-radius: 4px;">Ctrl+G</span> 在編輯器中修改計畫</li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a;">
+          <p style="font-size: 17px; font-weight: 600; color: #92400e;">
+            需求模糊時先 Plan，再動手
+          </p>
+          <p style="font-size: 15px; color: #92400e; margin-top: 8px;">
+            末尾加「如果有資訊不足的地方請先詢問我」
+          </p>
+        </div>
+      </div>
+      <div>
+        <div class="code-block" style="font-size: 14px; margin-bottom: 16px;">
+          <span style="color: #7dd3fc;">// Plan Mode（安全模式）</span><br>
+          「讀一下 src/auth 資料夾<br>
+          &nbsp;跟我說登入流程怎麼運作的」<br><br>
+          <span style="color: #7dd3fc;">// 確認後切回 Normal Mode</span><br>
+          「照你剛才的分析<br>
+          &nbsp;幫我加上 Google OAuth<br>
+          &nbsp;先寫測試再實作」
+        </div>
+        <div class="code-block" style="font-size: 14px;">
+          <span style="color: #7dd3fc;">// 需求釐清 prompt</span><br>
+          「我要做 [功能描述]<br>
+          &nbsp;哪些檔案要改？影響範圍？<br>
+          &nbsp;列出計畫，<span style="color: #fbbf24;">如果有資訊不足</span><br>
+          &nbsp;<span style="color: #fbbf24;">的地方請先詢問我</span>」
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P25: 四階段開發流程 ==================== -->
+<div class="slide bg-light" id="slide-25">
+  <div class="content-wrap">
+    <div class="section-label">Workflow</div>
+    <h2 class="slide-title">四階段開發流程 <span class="badge badge-eng">工程師</span></h2>
+    <p style="font-size: 18px; color: var(--text-muted); margin-bottom: 24px;">Claude Code 官方推薦的工作流程</p>
+    <div class="flow-steps" style="margin-bottom: 28px;">
+      <div class="flow-step" style="background: var(--white); border: 2px solid var(--border);">
+        <div class="step-label" style="color: var(--text-muted);">Step 1</div>
+        <div class="step-name" style="color: var(--primary);">Explore</div>
+      </div>
+      <div class="flow-arrow" style="color: var(--primary);">→</div>
+      <div class="flow-step" style="background: var(--white); border: 2px solid var(--border);">
+        <div class="step-label" style="color: var(--text-muted);">Step 2</div>
+        <div class="step-name" style="color: var(--primary);">Plan</div>
+      </div>
+      <div class="flow-arrow" style="color: var(--primary);">→</div>
+      <div class="flow-step" style="background: var(--white); border: 2px solid var(--border);">
+        <div class="step-label" style="color: var(--text-muted);">Step 3</div>
+        <div class="step-name" style="color: var(--primary);">Implement</div>
+      </div>
+      <div class="flow-arrow" style="color: var(--primary);">→</div>
+      <div class="flow-step" style="background: var(--white); border: 2px solid var(--border);">
+        <div class="step-label" style="color: var(--text-muted);">Step 4</div>
+        <div class="step-name" style="color: var(--primary);">Commit</div>
+      </div>
+    </div>
+    <div class="grid-4" style="gap: 16px;">
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">Explore</h3>
+        <div class="code-block" style="font-size: 12px; padding: 12px;">
+          <span style="color: #7dd3fc;">Plan Mode</span><br>
+          「讀 src/auth，了解<br>session 和登入機制」
+        </div>
+      </div>
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">Plan</h3>
+        <div class="code-block" style="font-size: 12px; padding: 12px;">
+          <span style="color: #7dd3fc;">/plan</span><br>
+          「加 OAuth，哪些<br>檔案要改？列計畫」
+        </div>
+      </div>
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">Implement</h3>
+        <div class="code-block" style="font-size: 12px; padding: 12px;">
+          <span style="color: #7dd3fc;">Normal Mode</span><br>
+          「照計畫實作，寫<br>測試，跑測試修好」
+        </div>
+      </div>
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">Commit</h3>
+        <div class="code-block" style="font-size: 12px; padding: 12px;">
+          <span style="color: #7dd3fc;">/commit</span><br>
+          分析 diff、自動格式<br>conventional commit
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P26: Context 管理 ==================== -->
+<div class="slide bg-dark" id="slide-26">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label" style="color: var(--accent);">Context Management</div>
+    <h2 class="slide-title">Context Window 是最重要的資源 <span class="badge badge-eng">工程師</span></h2>
+    <p style="font-size: 20px; opacity: 0.8; margin-bottom: 32px;">
+      context 越滿，AI 越笨 — 所有最佳實踐的出發點
+    </p>
+    <div class="grid-4" style="gap: 16px;">
+      <div class="card-dark" style="text-align: center; padding: 24px;">
+        <div style="font-size: 28px; margin-bottom: 8px; font-family: 'JetBrains Mono'; color: var(--accent);">/compact</div>
+        <p style="font-size: 15px; opacity: 0.8; line-height: 1.5;">
+          80% 就要清理<br>手動壓縮歷史<br>可指定保留重點
+        </p>
+      </div>
+      <div class="card-dark" style="text-align: center; padding: 24px;">
+        <div style="font-size: 28px; margin-bottom: 8px; font-family: 'JetBrains Mono'; color: var(--accent);">/clear</div>
+        <p style="font-size: 15px; opacity: 0.8; line-height: 1.5;">
+          任務切換時用<br>完全重置 context<br>乾淨開始新任務
+        </p>
+      </div>
+      <div class="card-dark" style="text-align: center; padding: 24px;">
+        <div style="font-size: 28px; margin-bottom: 8px; font-family: 'JetBrains Mono'; color: var(--accent);">/btw</div>
+        <p style="font-size: 15px; opacity: 0.8; line-height: 1.5;">
+          快速提問<br>不進對話歷史<br>零 context 成本
+        </p>
+      </div>
+      <div class="card-dark" style="text-align: center; padding: 24px;">
+        <div style="font-size: 28px; margin-bottom: 8px; font-family: 'JetBrains Mono'; color: var(--accent);">Subagent</div>
+        <p style="font-size: 15px; opacity: 0.8; line-height: 1.5;">
+          調查工作丟出去<br>不污染主 context<br>回報摘要就好
+        </p>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="card-dark" style="max-width: 700px; margin: 0 auto; text-align: left;">
+      <p style="font-size: 17px; line-height: 1.7;">
+        <span style="color: var(--accent);">常見失敗：</span>一個 session 做很多不相關的事（「廚房水槽 session」）<br>
+        <strong>解法：</strong>一個任務一個 session，做完 <span style="font-family: 'JetBrains Mono';">/clear</span> 再開始下一個
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P27: 品質四道防線 ==================== -->
+<div class="slide bg-accent-gradient" id="slide-27">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label" style="color: var(--accent);">Quality Gates</div>
+    <h2 class="slide-title">品質四道防線 <span class="badge badge-eng">工程師</span></h2>
+    <div class="defense-grid" style="margin-bottom: 24px;">
+      <div class="defense-card">
+        <div class="defense-num">1</div>
+        <h4>Code Review</h4>
+        <p>讓 AI 審 AI 的 code</p>
+        <div style="margin-top: 8px; font-size: 13px; opacity: 0.6; font-family: 'JetBrains Mono';">
+          「review 這個 PR<br>看 edge cases」
+        </div>
+      </div>
+      <div class="defense-card">
+        <div class="defense-num">2</div>
+        <h4>TDD</h4>
+        <p>先定義「對」再寫</p>
+        <div style="margin-top: 8px; font-size: 13px; opacity: 0.6; font-family: 'JetBrains Mono';">
+          「先寫失敗測試<br>再實作到通過」
+        </div>
+      </div>
+      <div class="defense-card">
+        <div class="defense-num">3</div>
+        <h4>Debugging</h4>
+        <p>結構化除錯流程</p>
+        <div style="margin-top: 8px; font-size: 13px; opacity: 0.6; font-family: 'JetBrains Mono';">
+          「[貼 error]<br>修好，別壓 error」
+        </div>
+      </div>
+      <div class="defense-card">
+        <div class="defense-num">4</div>
+        <h4>Security Review</h4>
+        <p>你不問，它不做</p>
+        <div style="margin-top: 8px; font-size: 13px; opacity: 0.6; font-family: 'JetBrains Mono';">
+          「用 subagent 做<br>security review」
+        </div>
+      </div>
+    </div>
+    <div class="card-dark" style="max-width: 800px; margin: 0 auto; text-align: left;">
+      <p style="font-size: 17px; line-height: 1.7;">
+        <span style="color: var(--accent);">真實案例：</span>密碼寫進 log — 三道防線沒擋到，第四道才抓到。<br>
+        <strong>能跑 ≠ 能上 production。</strong>AI 不會主動幫你想攻擊面。<br>
+        <span style="opacity: 0.7;">不是每次全開，而是看場景組合。</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P28: Commands ==================== -->
+<div class="slide bg-white" id="slide-28">
+  <div class="content-wrap">
+    <div class="section-label">Commands</div>
+    <h2 class="slide-title">Custom Commands — 一鍵觸發工作流 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <p style="font-size: 18px; line-height: 1.7; margin-bottom: 16px;">
+          Claude Code 內建 + 自訂 Commands：
+        </p>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 12px;">
+          <span style="color: #7dd3fc;"># 內建指令（開箱即用）</span><br>
+          /init &nbsp;&nbsp;&nbsp;→ 生成 CLAUDE.md<br>
+          /commit &nbsp;→ 智慧 commit（分析 diff）<br>
+          /review &nbsp;→ PR Code Review<br>
+          /compact → 壓縮 context<br>
+          /plan &nbsp;&nbsp;&nbsp;→ 進入計劃模式
+        </div>
+        <div class="code-block" style="font-size: 13px;">
+          <span style="color: #7dd3fc;"># 自訂指令（.claude/commands/）</span><br>
+          /review-pr → 客製化 PR review<br>
+          /release-note → 自動產 changelog<br>
+          /create-arch-doc → 產架構文件<br>
+          <span style="color: #fbbf24;">frontmatter 可指定 model + tools</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-size: 18px; margin-bottom: 16px; font-weight: 600;">Command vs Agent vs Skill</p>
+        <table class="slide-table" style="font-size: 15px;">
+          <thead>
+            <tr><th>類型</th><th>用途</th><th>Context</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Command</strong></td><td>重複的日常流程</td><td>注入現有</td></tr>
+            <tr><td><strong>Agent</strong></td><td>功能特化任務</td><td>獨立</td></tr>
+            <tr><td><strong>Skill</strong></td><td>領域知識模組</td><td>按需載入</td></tr>
+          </tbody>
+        </table>
+        <div class="spacer"></div>
+        <div class="card" style="background: #f0fdf4; border-color: var(--border);">
+          <p style="font-size: 16px; color: var(--text-muted); line-height: 1.6;">
+            <strong>Command 支援 frontmatter：</strong><br>
+            <span style="font-family: 'JetBrains Mono';">model:</span> 指定模型（如 sonnet 省成本）<br>
+            <span style="font-family: 'JetBrains Mono';">allowed-tools:</span> 限制可用工具<br>
+            <span style="font-family: 'JetBrains Mono';">argument-hint:</span> 提示參數格式
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P29: Hooks ==================== -->
+<div class="slide bg-light" id="slide-29">
+  <div class="content-wrap">
+    <div class="section-label">Hooks</div>
+    <h2 class="slide-title">Hooks — 零例外的自動化 <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2">
+      <div>
+        <div class="card" style="margin-bottom: 20px; border-color: #fecaca; background: #fff5f5;">
+          <h3 style="color: #dc2626; font-size: 17px; margin-bottom: 8px;">CLAUDE.md = 建議性</h3>
+          <p style="font-size: 15px; line-height: 1.5;">「你應該跑 lint」→ AI 可能忽略</p>
+        </div>
+        <div class="card" style="margin-bottom: 20px; border-color: var(--border); background: #f0fdf4;">
+          <h3 style="color: var(--primary); font-size: 17px; margin-bottom: 8px;">Hooks = 確定性</h3>
+          <p style="font-size: 15px; line-height: 1.5;">自動跑 lint → 保證每次都執行</p>
+        </div>
+        <p style="font-size: 17px; margin-bottom: 12px;"><strong>四種 Handler：</strong></p>
+        <table class="slide-table" style="font-size: 14px;">
+          <thead>
+            <tr><th>類型</th><th>說明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Command</td><td>執行 shell 指令</td></tr>
+            <tr><td>HTTP</td><td>發送 webhook</td></tr>
+            <tr><td>Prompt</td><td>用 AI 做語義判斷</td></tr>
+            <tr><td>Agent</td><td>產生 subagent 驗證</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <p style="font-size: 17px; margin-bottom: 12px;"><strong>settings.json 範例：</strong></p>
+        <div class="code-block" style="font-size: 13px;">
+          {<br>
+          &nbsp;&nbsp;<span style="color: #7dd3fc;">"hooks"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #fbbf24;">"PostToolUse"</span>: [{<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"matcher": "Write|Edit",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hooks": [{<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type": "command",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"command": "prettier --write<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\"$FILE_PATH\""<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}]<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;}]<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <div class="spacer-sm"></div>
+        <div class="card" style="background: #fef3c7; border-color: #fde68a; padding: 16px;">
+          <p style="font-size: 15px; color: #92400e; line-height: 1.6;">
+            <strong>真實案例：</strong>任務完成桌面通知<br>
+            <span style="font-size: 14px;">Stop event → osascript 推播通知<br>
+            離開位子也不錯過 AI 的回報</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P30: Subagents / Agent Teams ==================== -->
+<div class="slide bg-dark" id="slide-30">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label" style="color: var(--accent);">Multi-Agent</div>
+    <h2 class="slide-title">Subagents & Agent Teams <span class="badge badge-eng">工程師</span></h2>
+    <div class="grid-2" style="text-align: left; margin-bottom: 28px;">
+      <div class="card-dark">
+        <h3 style="color: var(--accent); font-size: 20px; margin-bottom: 16px;">Custom Agent 範例</h3>
+        <div class="code-block" style="font-size: 12px; margin-bottom: 12px;">
+          <span style="color: #7dd3fc;"># ocelot-backend-developer.md</span><br>
+          <span style="color: #fbbf24;">---</span><br>
+          name: ocelot-backend-developer<br>
+          model: opus<br>
+          <span style="color: #fbbf24;">---</span><br>
+          Senior Backend Developer<br>
+          FastAPI + SQLModel + PostgreSQL
+        </div>
+        <p style="font-size: 15px; opacity: 0.8; line-height: 1.5;">
+          開發流程：Context → Planning →<br>
+          Implementation → Testing → Quality<br>
+          每個 Agent 有自己的角色和工具限制
+        </p>
+      </div>
+      <div class="card-dark">
+        <h3 style="color: var(--accent); font-size: 20px; margin-bottom: 16px;">Agent Teams（多 Agent 協作）</h3>
+        <ul class="bullet-list" style="font-size: 17px;">
+          <li>Team Lead 分配任務</li>
+          <li>Teammates 各自獨立 context</li>
+          <li>Teammates 之間可<strong>直接通訊</strong></li>
+          <li>適合：大規模遷移、並行開發</li>
+        </ul>
+        <div class="code-block" style="font-size: 13px; margin-top: 16px;">
+          Team Lead 協調<br>
+          &nbsp;├── Agent A: 後端 API 開發<br>
+          &nbsp;├── Agent B: 前端整合<br>
+          &nbsp;└── Agent C: 測試撰寫
+        </div>
+      </div>
+    </div>
+    <p style="font-size: 20px; opacity: 0.8;">
+      從「一人一 AI」到<span class="highlight">「一人 N 個 AI」</span>
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P31: Section Divider ==================== -->
+<div class="slide bg-gradient section-divider" id="slide-31">
+  <div class="section-label" style="color: var(--accent);">Section 04</div>
+  <h1 class="slide-title">從 Prompt<br>到 Harness</h1>
+  <p style="font-size: 22px; opacity: 0.8; margin-top: 16px;">
+    <span class="badge badge-all">全員適用</span>
+  </p>
+</div>
+
+<!-- ==================== P32: 三代演進 ==================== -->
+<div class="slide bg-light" id="slide-32">
+  <div class="content-wrap">
+    <div class="section-label">Evolution</div>
+    <h2 class="slide-title">三代演進 <span class="badge badge-all">全員適用</span></h2>
+    <div class="timeline" style="margin-bottom: 28px;">
+      <div class="timeline-item">
+        <div class="year">2022 — 2024</div>
+        <h3 style="color: var(--text);">Prompt Engineering</h3>
+        <p style="color: var(--text-muted);">寫好一個問題<br>所有人都需要</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2025 — 2026</div>
+        <h3 style="color: var(--text);">Context Engineering</h3>
+        <p style="color: var(--text-muted);">管理 AI 的記憶和工具<br>今天講的大部分都是這個</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2026 —</div>
+        <h3 style="color: var(--text);">Harness Engineering</h3>
+        <p style="color: var(--text-muted);">多 AI 分工與制衡<br>Generator-Evaluator 分離</p>
+      </div>
+    </div>
+    <div class="card" style="max-width: 800px; margin: 0 auto; text-align: center;">
+      <p style="font-size: 20px; line-height: 1.7; color: var(--text);">
+        <strong>Prompt</strong> = 寫好一個問題<br>
+        <strong>Context</strong> = CLAUDE.md + Skills + Plugins — 管理 AI 的記憶<br>
+        <strong>Harness</strong> = Agent Teams + Hooks — 多 AI 分工與制衡
+      </p>
+    </div>
+    <p style="text-align: center; margin-top: 20px; font-size: 22px; color: var(--primary); font-weight: 600;">
+      掌握 Context Engineering，你的效率就跟別人拉開差距
+    </p>
+  </div>
+</div>
+
+<!-- ==================== P33: Prompt 好壞對比 ==================== -->
+<div class="slide bg-white" id="slide-33">
+  <div class="content-wrap">
+    <div class="section-label">Prompt Tips</div>
+    <h2 class="slide-title">好 Prompt vs 壞 Prompt <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <div class="card" style="border-color: #fecaca; background: #fff5f5;">
+        <h3 style="color: #dc2626; font-size: 18px; margin-bottom: 12px;">Bad — 模糊、沒驗證標準</h3>
+        <div class="code-block" style="font-size: 14px; margin-bottom: 12px;">
+          <span style="color: #ef4444;">「加測試」</span>
+        </div>
+        <div class="code-block" style="font-size: 14px; margin-bottom: 12px;">
+          <span style="color: #ef4444;">「修登入 bug」</span>
+        </div>
+        <div class="code-block" style="font-size: 14px;">
+          <span style="color: #ef4444;">「讓 dashboard 好看一點」</span>
+        </div>
+      </div>
+      <div class="card" style="border-color: var(--border); background: #f0fdf4;">
+        <h3 style="color: var(--primary); font-size: 18px; margin-bottom: 12px;">Good — 具體、可驗證、有範圍</h3>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 12px;">
+          <span style="color: var(--primary-light);">「幫 foo.py 寫測試，cover 使用者<br>登出的 edge case，不要用 mock」</span>
+        </div>
+        <div class="code-block" style="font-size: 13px; margin-bottom: 12px;">
+          <span style="color: var(--primary-light);">「session timeout 後登入失敗<br>檢查 src/auth，先寫失敗測試再修」</span>
+        </div>
+        <div class="code-block" style="font-size: 13px;">
+          <span style="color: var(--primary-light);">「[貼截圖] 實作這個設計<br>完成後截圖比對，列出差異」</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid-3" style="gap: 16px;">
+      <div class="card" style="padding: 20px; text-align: center;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">具體</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">指定檔案、限制、範例</p>
+      </div>
+      <div class="card" style="padding: 20px; text-align: center;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">可驗證</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">測試、截圖、預期輸出</p>
+      </div>
+      <div class="card" style="padding: 20px; text-align: center;">
+        <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 8px;">有範圍</h3>
+        <p style="font-size: 15px; color: var(--text-muted);">不要讓 AI 無限探索</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P34: 五個常見失敗模式 ==================== -->
+<div class="slide bg-dark" id="slide-34">
+  <div class="content-wrap" style="text-align: center;">
+    <div class="section-label" style="color: var(--accent);">Anti-patterns</div>
+    <h2 class="slide-title">五個常見失敗模式 <span class="badge badge-all">全員適用</span></h2>
+    <table class="slide-table-dark" style="text-align: left;">
+      <thead>
+        <tr><th>失敗模式</th><th>症狀</th><th>解法</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>廚房水槽 session</strong></td>
+          <td>一個 session 做很多不相關的事</td>
+          <td><span style="font-family: 'JetBrains Mono';">/clear</span> 切換任務</td>
+        </tr>
+        <tr>
+          <td><strong>反覆修正</strong></td>
+          <td>同一問題修了兩次還不對</td>
+          <td><span style="font-family: 'JetBrains Mono';">/clear</span> 重寫更好的 prompt</td>
+        </tr>
+        <tr>
+          <td><strong>CLAUDE.md 過度膨脹</strong></td>
+          <td>Claude 忽略一半的指令</td>
+          <td>狠心刪減，改用 hooks 或 skills</td>
+        </tr>
+        <tr>
+          <td><strong>信任但不驗證</strong></td>
+          <td>看起來對但 edge case 沒處理</td>
+          <td>一定要有驗證手段</td>
+        </tr>
+        <tr>
+          <td><strong>無限制探索</strong></td>
+          <td>叫 AI 調查但沒限範圍</td>
+          <td>限縮範圍或用 subagent</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="spacer"></div>
+    <div class="card-dark" style="max-width: 700px; margin: 0 auto;">
+      <p style="font-size: 18px; line-height: 1.7;">
+        <span style="color: var(--accent);">核心原則：</span>及早修正 — <span style="font-family: 'JetBrains Mono';">Esc</span> 停止、<span style="font-family: 'JetBrains Mono';">Esc Esc</span> 回退到 checkpoint
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== P35: 今天開始的三件事 ==================== -->
+<div class="slide bg-accent-gradient" id="slide-35">
+  <div class="content-wrap" style="text-align: center;">
+    <h2 class="slide-title">今天開始的三件事 <span class="badge badge-all">全員適用</span></h2>
+    <div class="grid-2" style="max-width: 1000px; margin: 0 auto;">
+      <div class="action-card">
+        <h3><span class="badge badge-pm" style="font-size: 16px;">非工程師</span></h3>
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>用 Claude Chat / Cowork</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>建 Project + Custom Instructions</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>找一個重複工作讓 AI 做</span>
+        </div>
+      </div>
+      <div class="action-card">
+        <h3><span class="badge badge-eng" style="font-size: 16px;">工程師</span></h3>
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>裝 Claude Code + 建 CLAUDE.md</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>用四階段流程完成一個任務</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>裝一個 MCP Server 試試</span>
+        </div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <p style="font-size: 18px; opacity: 0.7;">官方文件：docs.anthropic.com/claude-code</p>
+  </div>
+</div>
+
+<!-- ==================== P36: Q&A ==================== -->
+<div class="slide bg-gradient" id="slide-36">
+  <div class="qa-title">Q&A</div>
+  <div class="qa-info">
+    <p><strong>Jason</strong></p>
+    <p>軟體工程師</p>
+  </div>
+  <div style="margin-top: 36px; text-align: left; max-width: 600px;">
+    <p style="font-size: 16px; opacity: 0.6; margin-bottom: 12px;">引導問題：</p>
+    <ol style="font-size: 17px; opacity: 0.75; line-height: 2; padding-left: 20px;">
+      <li>AI 什麼時候反而讓你更慢？</li>
+      <li>公司導入 AI 工具最大顧慮是什麼？</li>
+      <li>非工程師日常可以怎麼用？</li>
+      <li>一個人用跟團隊用有什麼差別？</li>
+      <li>學習曲線大嗎？</li>
+    </ol>
+  </div>
+</div>
+
+</div><!-- end slides-container -->
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Page Number -->
+<div class="page-number" id="pageNumber">1 / 36</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  const progressBar = document.getElementById('progressBar');
+  const pageNumber = document.getElementById('pageNumber');
+
+  function updateSlide() {
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === currentSlide);
+    });
+    progressBar.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+    pageNumber.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+
+    // Adapt page number color
+    const active = slides[currentSlide];
+    if (active.classList.contains('bg-white') || active.classList.contains('bg-light')) {
+      pageNumber.style.color = 'rgba(0,0,0,0.3)';
+    } else {
+      pageNumber.style.color = 'rgba(255,255,255,0.5)';
+    }
+  }
+
+  function next() {
+    if (currentSlide < totalSlides - 1) { currentSlide++; updateSlide(); }
+  }
+
+  function prev() {
+    if (currentSlide > 0) { currentSlide--; updateSlide(); }
+  }
+
+  function goTo(n) {
+    if (n >= 0 && n < totalSlides) { currentSlide = n; updateSlide(); }
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    switch(e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+      case 'PageDown':
+        e.preventDefault(); next(); break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+      case 'PageUp':
+        e.preventDefault(); prev(); break;
+      case 'Home':
+        e.preventDefault(); goTo(0); break;
+      case 'End':
+        e.preventDefault(); goTo(totalSlides - 1); break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+        break;
+    }
+
+    // Number keys for quick jump (1-9 = slides 1-9, 0 = slide 10)
+    if (e.key >= '0' && e.key <= '9') {
+      const n = e.key === '0' ? 9 : parseInt(e.key) - 1;
+      goTo(n);
+    }
+  });
+
+  // Touch navigation
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  });
+
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) next();
+      else prev();
+    }
+  });
+
+  // Click navigation (left/right halves)
+  document.addEventListener('click', function(e) {
+    if (e.clientX > window.innerWidth * 0.6) next();
+    else if (e.clientX < window.innerWidth * 0.4) prev();
+  });
+
+  // Init
+  updateSlide();
+})();
+</script>
+
+</body>
+</html>
