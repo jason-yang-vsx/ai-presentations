@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>請假補卡自動化 — Claude Code × opencli × 老式 HR 系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #059669;
+    --primary-light: #10B981;
+    --primary-dark: #047857;
+    --accent: #FBBF24;
+    --bg: #ECFDF5;
+    --bg-white: #FFFFFF;
+    --bg-card: #F0FDF4;
+    --text: #064E3B;
+    --text-muted: #065F46;
+    --text-light: #6EE7B7;
+    --border: #A7F3D0;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    --success: #10B981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Open Sans', sans-serif;
+    background: #0F172A;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+    padding: 60px 100px;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; }
+
+  /* Slide Backgrounds */
+  .bg-gradient {
+    background: linear-gradient(135deg, #064E3B 0%, #047857 40%, #059669 100%);
+    color: #ECFDF5;
+  }
+  .bg-white { background: #FFFFFF; color: var(--text); }
+  .bg-light { background: var(--bg); color: var(--text); }
+  .bg-dark {
+    background: linear-gradient(135deg, #022c22 0%, #064E3B 100%);
+    color: #ECFDF5;
+  }
+  .bg-accent {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+    color: #ECFDF5;
+  }
+
+  /* Typography */
+  h1, h2, h3 { font-family: 'Poppins', 'Noto Sans TC', sans-serif; }
+  h1 { font-size: 96px; font-weight: 800; line-height: 1.05; letter-spacing: -2px; }
+  h2 { font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
+  h3 { font-size: 42px; font-weight: 600; line-height: 1.15; }
+  .subtitle { font-size: 36px; font-weight: 300; line-height: 1.3; opacity: 0.85; }
+  .body-text { font-size: 28px; line-height: 1.5; }
+  .small-text { font-size: 24px; line-height: 1.4; }
+  .label { font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; }
+  .meta { font-size: 28px; opacity: 0.7; }
+
+  .center-stack {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 24px;
+  }
+  .left-stack {
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    width: 100%;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    width: 100%;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(5,150,105,0.08);
+  }
+  .card-dark {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08));
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 28px; margin-bottom: 12px; color: var(--primary); }
+  .card-dark h3 { color: var(--accent); font-size: 28px; margin-bottom: 12px; }
+  .card-accent h3 { font-size: 28px; margin-bottom: 12px; }
+
+  /* Tags & Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+  .badge-yellow { background: #FEF3C7; color: #92400E; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-dark { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+  .badge-purple { background: #EDE9FE; color: #5B21B6; }
+  .badge-orange { background: #FED7AA; color: #9A3412; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 22px;
+  }
+  table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table tr:nth-child(even) { background: var(--bg-card); }
+  table th:first-child { border-radius: 10px 0 0 0; }
+  table th:last-child { border-radius: 0 10px 0 0; }
+
+  /* List */
+  ul { list-style: none; padding: 0; }
+  ul li {
+    font-size: 22px;
+    padding: 6px 0;
+    padding-left: 28px;
+    position: relative;
+    line-height: 1.4;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 9px;
+    height: 9px;
+    background: var(--primary-light);
+    border-radius: 50%;
+  }
+  .bg-gradient ul li::before,
+  .bg-dark ul li::before,
+  .bg-accent ul li::before { background: var(--accent); }
+
+  /* KPI */
+  .kpi { text-align: center; }
+  .kpi-number {
+    font-family: 'Poppins', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 22px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .bg-gradient .kpi-number,
+  .bg-dark .kpi-number { color: var(--accent); }
+  .bg-gradient .kpi-label,
+  .bg-dark .kpi-label { color: #A7F3D0; }
+
+  /* Code block */
+  .code-block {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 18px 22px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 16px;
+    color: #E2E8F0;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .comment { color: #64748B; }
+  .code-block .keyword { color: #38BDF8; }
+  .code-block .string { color: #6EE7B7; }
+  .code-block .number { color: #FBBF24; }
+  .code-block .func { color: #C4B5FD; }
+
+  /* Diagram */
+  .diagram-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .diagram-arrow {
+    font-size: 28px;
+    color: var(--primary-light);
+    margin: 0 8px;
+  }
+  .bg-dark .diagram-arrow { color: var(--accent); }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Step row */
+  .step-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+  }
+  .step-item {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(5,150,105,0.06);
+  }
+  .step-item .step-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px;
+    font-family: 'Poppins', sans-serif;
+    margin: 0 auto 10px;
+  }
+  .step-item h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .step-item p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .step-connector {
+    display: flex;
+    align-items: center;
+    color: var(--primary-light);
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  /* Decorative */
+  .corner-decor {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .corner-decor.top-right {
+    top: -100px; right: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+  .corner-decor.bottom-left {
+    bottom: -100px; left: -100px;
+    background: radial-gradient(circle, var(--primary-light), transparent);
+  }
+
+  .page-num {
+    position: absolute;
+    bottom: 30px;
+    right: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.4;
+  }
+
+  .section-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--accent));
+  }
+
+  .slide-header {
+    margin-bottom: 24px;
+    width: 100%;
+  }
+  .slide-header h2 { font-size: 46px; margin-bottom: 4px; }
+  .slide-header .label { margin-bottom: 8px; display: block; }
+
+  .highlight { color: var(--accent); }
+  .highlight-green { color: var(--primary-light); }
+  .highlight-red { color: var(--danger); }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+
+  /* Inline code */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: rgba(5,150,105,0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.88em;
+    color: var(--primary-dark);
+  }
+  .bg-dark code, .bg-gradient code, .bg-accent code {
+    background: rgba(255,255,255,0.12);
+    color: #A7F3D0;
+  }
+
+  /* Pitfall row */
+  .pitfall-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 20px;
+    border-radius: 10px;
+    background: white;
+    border-left: 4px solid var(--danger);
+    margin-bottom: 8px;
+  }
+  .pitfall-row .pitfall {
+    font-size: 19px;
+    color: var(--danger);
+    font-weight: 500;
+  }
+  .pitfall-row .fix {
+    font-size: 19px;
+    color: var(--primary-dark);
+  }
+  .pitfall-row .fix::before {
+    content: '→ ';
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  @media (max-width: 1400px) {
+    .slide { padding: 50px 70px; }
+    h1 { font-size: 72px; }
+    h2 { font-size: 52px; }
+    h3 { font-size: 34px; }
+    .slide-header h2 { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ============================================ -->
+<!-- SLIDE 1: 封面 -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack active" id="s1">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#A7F3D0;">Personal Productivity Hack</span>
+  <h1 style="max-width:1300px;font-size:84px;">請假補卡自動化</h1>
+  <p class="subtitle" style="max-width:1000px;margin-top:12px;">
+    用 Claude Code × opencli 馴服老 ASP.NET 人資系統
+  </p>
+  <div style="margin-top:24px;">
+    <span class="meta">Jason Yang</span>
+    <span class="meta" style="margin:0 16px;">|</span>
+    <span class="meta">Backend Meeting · 2026</span>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">1 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 2: 痛點 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s2">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Why</span>
+    <h2>老式 HR 系統的日常</h2>
+  </div>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="font-size:24px;">十年前的技術棧</h3>
+      <p class="small-text" style="color:var(--text-muted);">
+        ASP.NET WebForms + DevExpress + ViewState 一條龍。子假別、補卡原因都是<strong>彈窗式 grid-lookup</strong>，閒置 2-3 分鐘 session 直接失效。
+      </p>
+      <div style="margin-top:16px;">
+        <span class="badge badge-red">19 個假別</span>
+        <span class="badge badge-yellow">3 個 popup grid</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:24px;">手動操作太繁瑣</h3>
+      <p class="small-text" style="color:var(--text-muted);">
+        補卡單 6 欄、請假單 9 欄，每張要點開下拉、搜尋、選取、設日期時間、儲存、送審。一張單 <strong>3-5 分鐘</strong>，遲到一次就要開一張。
+      </p>
+      <div style="margin-top:16px;">
+        <span class="badge badge-orange">每張 3-5 min</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:24px;">堆積得很快</h3>
+      <p class="small-text" style="color:var(--text-muted);">
+        幾週下來容易累積一堆出勤異常——遲到、忘刷卡、整天沒打卡。光手動填單就要 <strong>一個多小時</strong>，加上分類比對更耗心力。
+      </p>
+      <div style="margin-top:16px;">
+        <span class="badge badge-red">手動 90 min+</span>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">2 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 3: 架構流程 -->
+<!-- ============================================ -->
+<div class="slide bg-dark center-stack" id="s3">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <span class="label" style="color:#6EE7B7;">Architecture</span>
+  <h2 style="font-size:50px;margin-bottom:24px;">整體架構</h2>
+
+  <div class="flow-row" style="gap:16px;">
+    <div class="diagram-box" style="background:rgba(251,191,36,0.2);color:#FCD34D;border:1px solid rgba(251,191,36,0.3);">
+      <div>
+        <div style="font-size:28px;margin-bottom:4px;">使用者</div>
+        <div style="font-size:13px;opacity:0.7;">「幫我補卡 MM/DD HH:MM」</div>
+      </div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box" style="background:rgba(16,185,129,0.22);color:#6EE7B7;border:1px solid rgba(16,185,129,0.35);">
+      <div>
+        <div style="font-size:28px;margin-bottom:4px;">Claude Code</div>
+        <div style="font-size:13px;opacity:0.7;">解讀 + 編 Bash 腳本</div>
+      </div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box" style="background:rgba(168,85,247,0.2);color:#C4B5FD;border:1px solid rgba(168,85,247,0.3);">
+      <div>
+        <div style="font-size:28px;margin-bottom:4px;">opencli</div>
+        <div style="font-size:13px;opacity:0.7;">browser CLI</div>
+      </div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box" style="background:rgba(59,130,246,0.22);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);">
+      <div>
+        <div style="font-size:28px;margin-bottom:4px;">Chrome</div>
+        <div style="font-size:13px;opacity:0.7;">已登入 session</div>
+      </div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box" style="background:rgba(239,68,68,0.18);color:#FCA5A5;border:1px solid rgba(239,68,68,0.3);">
+      <div>
+        <div style="font-size:28px;margin-bottom:4px;">HR 系統</div>
+        <div style="font-size:13px;opacity:0.7;">ASP.NET + DevExpress</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="small-text" style="color:#A7F3D0;max-width:1000px;margin-top:32px;">
+    沒有 RPA、沒有 Selenium、沒有公司 IT 開 API。<br>
+    <strong>opencli browser</strong> 直接 attach 你正在用的那個 Chrome 分頁，沿用 SSO 登入態，靠 CDP + DOM 操作。
+  </p>
+
+  <div style="margin-top:36px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;">
+    <div class="card-dark" style="padding:14px 22px;text-align:center;">
+      <div style="font-size:14px;color:#A7F3D0;">Step 1</div>
+      <div style="font-size:17px;">開新增表單<br><span style="font-size:13px;opacity:0.6;">EditForm.aspx?FormMode=Add</span></div>
+    </div>
+    <div class="card-dark" style="padding:14px 22px;text-align:center;">
+      <div style="font-size:14px;color:#A7F3D0;">Step 2</div>
+      <div style="font-size:17px;">DevExpress API 填欄位<br><span style="font-size:13px;opacity:0.6;">SetDate / SetValue / SetText</span></div>
+    </div>
+    <div class="card-dark" style="padding:14px 22px;text-align:center;">
+      <div style="font-size:14px;color:#A7F3D0;">Step 3</div>
+      <div style="font-size:17px;">popup 用 cross-frame eval<br><span style="font-size:13px;opacity:0.6;">contentDocument.click()</span></div>
+    </div>
+    <div class="card-dark" style="padding:14px 22px;text-align:center;">
+      <div style="font-size:14px;color:#A7F3D0;">Step 4</div>
+      <div style="font-size:17px;">儲存草稿<br><span style="font-size:13px;opacity:0.6;">grep + click 工具列 [N]</span></div>
+    </div>
+    <div class="card-dark" style="padding:14px 22px;text-align:center;">
+      <div style="font-size:14px;color:#A7F3D0;">Step 5</div>
+      <div style="font-size:17px;">送審（使用者授權）<br><span style="font-size:13px;opacity:0.6;">FlowConfirm iframe</span></div>
+    </div>
+  </div>
+
+  <div class="page-num" style="color:#A7F3D0;">3 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 4: opencli 怎麼運作 (機制) -->
+<!-- ============================================ -->
+<div class="slide bg-light center-stack" id="s4mech">
+  <div class="section-bar"></div>
+  <span class="label">How It Works</span>
+  <h2 style="font-size:40px;margin-bottom:6px;">opencli 怎麼運作？三層架構</h2>
+  <p class="small-text" style="color:var(--text-muted);max-width:1100px;margin-bottom:14px;font-size:20px;">
+    一行 <code>opencli</code> 進來，自動分流走「純 HTTP」或「接你的 Chrome」兩條路
+  </p>
+  <img src="images/opencli-3-layer-arch.png" alt="opencli 三層架構" style="max-width:78%;max-height:50vh;border-radius:12px;box-shadow:0 8px 32px rgba(5,150,105,0.15);">
+  <div class="two-col" style="gap:24px;margin-top:14px;max-width:1200px;">
+    <div class="card" style="padding:14px 20px;">
+      <h3 style="font-size:18px;color:var(--text-muted);margin-bottom:4px;">PUBLIC / LOCAL — 不需 Chrome</h3>
+      <p class="small-text" style="font-size:16px;color:var(--text-muted);line-height:1.4;">
+        公開資料（HN 熱榜、天氣、bilibili）走純 HTTP <code>undici fetch</code>，零 LLM、超快。
+      </p>
+    </div>
+    <div class="card-accent" style="padding:14px 20px;border:2px solid var(--primary);">
+      <h3 style="font-size:18px;color:var(--primary-dark);margin-bottom:4px;">COOKIE / UI — 我們走這條 ⭐</h3>
+      <p class="small-text" style="font-size:16px;color:var(--text-muted);line-height:1.4;">
+        HR 系統要登入 → <strong>WebSocket 接你的 Chrome Bridge Extension</strong>，借用已登入 session 對 DOM 操作。
+      </p>
+    </div>
+  </div>
+  <p class="small-text" style="font-size:15px;color:var(--text-muted);opacity:0.7;margin-top:8px;">
+    圖片來源：OpenCLI Explainer Series（jackwener/OpenCLI）
+  </p>
+  <div class="page-num">4 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: opencli 是什麼 + 三鐵則 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s4">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Building Blocks</span>
+    <h2>opencli + 三條鐵則</h2>
+  </div>
+  <div class="two-col" style="gap:36px;">
+    <div class="card" style="height:100%;">
+      <div style="margin-bottom:10px;"><span class="badge badge-blue">opencli browser</span></div>
+      <h3 style="font-size:24px;">沿用既有 Chrome session</h3>
+      <p class="small-text" style="color:var(--text-muted);margin-bottom:12px;">
+        不需密碼、不需 WebDriver。透過 Chrome extension 把已登入的分頁變成 AI 可控的 DOM。
+      </p>
+      <ul style="font-size:18px;">
+        <li><code>state</code>：列出帶 <code>[N]</code> 的可點元素</li>
+        <li><code>click N</code> / <code>type N "text"</code>：用 index 操作</li>
+        <li><code>eval &lt;JS&gt;</code>：跑 JS（含 cross-frame）</li>
+        <li><code>screenshot</code> / <code>get</code> / <code>network</code>：抓畫面、值、API 流量</li>
+      </ul>
+    </div>
+    <div class="card-accent" style="height:100%;">
+      <div style="margin-bottom:10px;"><span class="badge badge-green">必須遵守</span></div>
+      <h3 style="font-size:24px;color:var(--primary-dark);">三條鐵則</h3>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--primary);font-size:19px;">1. 一條龍跑完</div>
+          <div style="font-size:17px;color:var(--text-muted);line-height:1.4;">老式 HR 系統閒置 ~2-3 分鐘 session 就失效。中間問問題、等回覆，回來頁面就 <code>about:blank</code>。</div>
+        </div>
+        <div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--primary);font-size:19px;">2. Bash tool 跑的是 zsh</div>
+          <div style="font-size:17px;color:var(--text-muted);line-height:1.4;"><code>for x in $VAR</code> 在 zsh <strong>不分詞</strong>，批次只跑 1 圈。用 shell function 逐筆呼叫。</div>
+        </div>
+        <div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--primary);font-size:19px;">3. iframe 內元素點不到</div>
+          <div style="font-size:17px;color:var(--text-muted);line-height:1.4;">popup grid 的「選取」鈕沒被 <code>state</code> 編 index。用 cross-frame eval + DevExpress client API 繞。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">5 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: 補卡 SOP -->
+<!-- ============================================ -->
+<div class="slide bg-light left-stack" id="s5">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">SOP — 補卡</span>
+    <h2>補卡單：5 步搞定一張</h2>
+  </div>
+  <div class="step-row" style="margin-bottom:20px;">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <h4>開新增表單</h4>
+      <p>EditForm.aspx?<br>ProgID=WATT0021900<br>&FormMode=Add</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <h4>SetDate + SetValue</h4>
+      <p>日期 / 時間 / 上下班<br>用 DevExpress API</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <h4>補卡原因</h4>
+      <p>SetValue('000…001')<br>= 忘刷卡</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <h4>儲存草稿</h4>
+      <p>state → grep<br><code>&lt;li title=儲存&gt;</code></p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">5</div>
+      <h4>清單驗證</h4>
+      <p>看單號出現<br>單況 = 底稿</p>
+    </div>
+  </div>
+
+  <div class="code-block" style="white-space:pre-wrap;font-size:15px;">
+<span class="comment">// 一條龍跑完（不要 break 成多次 tool call）</span>
+opencli browser open <span class="string">"...EditForm.aspx?ProgID=WATT0021900&FormMode=Add"</span> && \
+opencli browser wait time 3 && \
+opencli browser eval <span class="string">"(function(){
+  var c=ASPxClientControl.GetControlCollection(); function g(n){return c.GetByName(n);}
+  g('pnlForm_ctl03_FormLayout_ATTENDDATE').<span class="func">SetDate</span>(new Date(year, month-<span class="number">1</span>, day)); <span class="comment">// 月份 0-indexed</span>
+  g('pnlForm_ctl03_FormLayout_ATTENDTIME').<span class="func">SetValue</span>('<span class="string">HHMM</span>');               <span class="comment">// 例：'1000'</span>
+  g('pnlForm_ctl03_FormLayout_STATUS').<span class="func">SetValue</span>('<span class="string">2</span>');                  <span class="comment">// 2=上班 / 3=下班</span>
+  g('pnlForm_ctl03_FormLayout_TMP_REASONID').<span class="func">SetValue</span>('<span class="string">00000000000001</span>'); <span class="comment">// 忘刷卡</span>
+  return 'ok';
+})()"</span></div>
+
+  <div class="page-num">6 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 7: 請假 SOP -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s6">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">SOP — 請假</span>
+    <h2>請假單：6 步、多一個 iframe</h2>
+  </div>
+  <div class="step-row" style="margin-bottom:18px;">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <h4>開新增</h4>
+      <p>ProgID=<br>WATT0022500</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <h4>開子假別 popup</h4>
+      <p>click B1Img<br>iframe 載入</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <h4>cross-frame 點選</h4>
+      <p>keyword 搜尋<br>+ click DXCBtn0</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <h4>SetDate 起訖</h4>
+      <p>時數自動算<br>= 7.5h</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">5</div>
+      <h4>SetText 說明</h4>
+      <p>病假必填<br>填「病假」就過</p>
+    </div>
+    <div class="step-connector">→</div>
+    <div class="step-item">
+      <div class="step-num">6</div>
+      <h4>儲存</h4>
+      <p>idx 會飄<br>每次重抓</p>
+    </div>
+  </div>
+
+  <div class="two-col" style="gap:24px;">
+    <div class="card" style="padding:20px;">
+      <h3 style="font-size:20px;">⚠️ 子假別 ≠ 補卡原因</h3>
+      <p class="small-text" style="font-size:18px;color:var(--text-muted);">
+        補卡原因可以 <code>SetValue('00000…01')</code> 一步繞過 popup；但<strong>子假別 SetValue 會失效</strong>，因為「假別編號」要靠 server callback 帶出來。必須真的<strong>透過 popup 點選「選取」按鈕</strong>，才會觸發 callback、自動計算「請假時數」、通過儲存驗證。
+      </p>
+    </div>
+    <div class="code-block" style="font-size:15px;white-space:pre-wrap;">
+<span class="comment">// cross-frame eval：進入 iframe 點選</span>
+opencli browser eval <span class="string">"(function(){
+  var d = document.getElementById('popupHelper_CIF-1').contentDocument;
+  d.getElementById('PageToolbar_ITCNT1_edtKeyword_1_I').value='<span class="string">不扣薪</span>';
+  d.getElementById('PageToolbar_ITCNT1_edtKeyword_1_B0Img').click();
+})()"</span>
+opencli browser wait time 4
+opencli browser eval <span class="string">"(function(){
+  var d = document.getElementById('popupHelper_CIF-1').contentDocument;
+  [...d.querySelectorAll('tr')].forEach(r => {
+    if (/<span class="number">00204</span>/.test(r.innerText))
+      r.querySelector('[id*=DXCBtn]').click();
+  });
+})()"</span></div>
+  </div>
+  <div class="page-num">7 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 8: 送審流程 -->
+<!-- ============================================ -->
+<div class="slide bg-dark left-stack" id="s7">
+  <div class="corner-decor top-right" style="width:400px;height:400px;opacity:0.06;"></div>
+  <div class="slide-header">
+    <span class="label" style="color:#6EE7B7;">SOP — Submit for Approval</span>
+    <h2 style="font-size:42px;color:#ECFDF5;">送審：外部不可逆 → 留給人按</h2>
+  </div>
+  <p class="small-text" style="color:#A7F3D0;margin-bottom:20px;max-width:1000px;">
+    送審會 ping 主管（outward-facing、難回收），所以 AI <strong>絕不自動送審</strong>。流程是：先把單據填好存「底稿」（可改可刪），等人說 OK 才送。
+  </p>
+
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:1000px;">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:#FBBF24;color:#022c22;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">1</div>
+      <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:10px;padding:12px 20px;border:1px solid rgba(255,255,255,0.1);">
+        <span style="color:#D1FAE5;font-size:18px;">開單據 View 頁：<code>/EditForm.aspx?...&FormMode=View&FormID=&lt;FID&gt;</code></span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:#FBBF24;color:#022c22;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">2</div>
+      <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:10px;padding:12px 20px;border:1px solid rgba(255,255,255,0.1);">
+        <span style="color:#D1FAE5;font-size:18px;"><code>state</code> → grep <code>[N]&lt;li title=送審&gt;</code> → <code>opencli browser click N</code></span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:#FBBF24;color:#022c22;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">3</div>
+      <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:10px;padding:12px 20px;border:1px solid rgba(255,255,255,0.1);">
+        <span style="color:#D1FAE5;font-size:18px;">跳出 <code>FlowConfirm.aspx</code> iframe（id=<code>popupHelper_CIF-1</code>）— 等 ~5 秒</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:#3B82F6;color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">4</div>
+      <div style="flex:1;background:rgba(59,130,246,0.15);border-radius:10px;padding:12px 20px;border:1px solid rgba(59,130,246,0.35);">
+        <span style="color:#93C5FD;font-size:18px;font-weight:600;">cross-frame click <code>btnOK_I</code>：</span>
+        <div class="code-block" style="margin-top:8px;background:rgba(0,0,0,0.4);padding:10px 14px;font-size:14px;">document.getElementById('popupHelper_CIF-1').contentDocument.getElementById('btnOK_I').click()</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:#22C55E;color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">5</div>
+      <div style="flex:1;background:rgba(34,197,94,0.15);border-radius:10px;padding:12px 20px;border:1px solid rgba(34,197,94,0.35);">
+        <span style="color:#86EFAC;font-size:18px;">工具列「送審」灰掉 → 「抽單」亮起 → 清單<code>img.title</code> 變「簽核中」</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;display:flex;gap:18px;">
+    <div class="card-dark" style="padding:12px 20px;">
+      <div style="font-size:14px;color:#A7F3D0;">底稿（草稿）</div>
+      <div style="font-size:18px;color:#FCD34D;">可改、可刪、不通知主管</div>
+    </div>
+    <div class="card-dark" style="padding:12px 20px;">
+      <div style="font-size:14px;color:#A7F3D0;">簽核中</div>
+      <div style="font-size:18px;color:#FCD34D;">已 ping 主管，要撤回按「抽單」</div>
+    </div>
+  </div>
+
+  <div class="page-num" style="color:#A7F3D0;">8 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 9: 典型應用劇本 -->
+<!-- ============================================ -->
+<div class="slide bg-light center-stack" id="s8">
+  <div class="section-bar"></div>
+  <span class="label">Use Case</span>
+  <h2 style="font-size:46px;margin-bottom:8px;">典型應用劇本</h2>
+  <p class="body-text" style="color:var(--text-muted);margin-bottom:24px;">
+    一個下午搞定一段時間累積下來的出勤異常
+  </p>
+
+  <div class="four-col" style="margin-bottom:28px;">
+    <div class="card" style="text-align:center;padding:24px 14px;">
+      <div class="kpi-number">0</div>
+      <div class="kpi-label">次密碼輸入<br>沿用 Chrome session</div>
+    </div>
+    <div class="card" style="text-align:center;padding:24px 14px;">
+      <div class="kpi-number">~5s</div>
+      <div class="kpi-label">單張表單<br>從開啟到存草稿</div>
+    </div>
+    <div class="card" style="text-align:center;padding:24px 14px;">
+      <div class="kpi-number">1</div>
+      <div class="kpi-label">條腳本<br>批次處理 N 張</div>
+    </div>
+    <div class="card" style="text-align:center;padding:24px 14px;">
+      <div class="kpi-number">∞</div>
+      <div class="kpi-label">可重用次數<br>同樣指令直接做</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="gap:28px;">
+    <div class="card-accent" style="padding:22px;">
+      <h3 style="font-size:22px;color:var(--primary-dark);margin-bottom:10px;">標準工作流</h3>
+      <ul style="font-size:18px;">
+        <li>抓取指定區段的出勤異常清單</li>
+        <li>分類：部分時段缺勤 → 補卡 / 全天 → 請假</li>
+        <li>批次填單存底稿（可改可刪、不會通知主管）</li>
+        <li>使用者檢視後批次送審</li>
+        <li>輸出對照報告（每天用了哪張單）</li>
+      </ul>
+    </div>
+    <div class="card-accent" style="padding:22px;">
+      <h3 style="font-size:22px;color:var(--primary-dark);margin-bottom:10px;">附加產出</h3>
+      <ul style="font-size:18px;">
+        <li><code>CLAUDE.md</code> — 系統 + 操作手冊，可重複利用</li>
+        <li><code>leave-analysis-*.md</code> — 假別額度與方案比較</li>
+        <li>跨 session 記憶（system + opencli + zsh 三條）</li>
+        <li>下次同樣指令就直接做、不用再教</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-num">9 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 10: 踩過的雷 -->
+<!-- ============================================ -->
+<div class="slide bg-white left-stack" id="s9">
+  <div class="section-bar"></div>
+  <div class="slide-header">
+    <span class="label">Lessons Learned</span>
+    <h2>踩過的 7 個雷 → 對策</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+    <div class="pitfall-row">
+      <div class="pitfall">❌ 中間停一下，頁面變 <code>about:blank</code></div>
+      <div class="fix">整個任務寫成一條 Bash 腳本連續跑完，問問題前先存草稿</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ <code>for x in $FORMIDS</code> 只跑 1 圈</div>
+      <div class="fix">Bash tool 跑 zsh、不分詞 → 用 shell function 逐筆呼叫</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ popup grid 的「選取」按鈕沒有 <code>[N]</code></div>
+      <div class="fix">cross-frame eval：<code>contentDocument.click()</code> 進 iframe 點</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ 子假別 <code>SetValue</code> 繞過 popup，存檔報「假別額度」</div>
+      <div class="fix">假別編號靠 server callback 帶出 → 一定要透過 popup 點選取</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ 病假儲存按了沒反應、清單也沒出現</div>
+      <div class="fix">「請假說明」病假必填，無錯誤訊息 → 填「病假」兩字就過</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ 儲存按鈕 index 從 [50] 飄到 [36]</div>
+      <div class="fix">每次點之前重新 <code>state</code> + grep，別存舊 index 重用</div>
+    </div>
+    <div class="pitfall-row">
+      <div class="pitfall">❌ <code>AskUserQuestion</code> 期間 session 失效</div>
+      <div class="fix">問之前先存草稿，問完整批重跑（草稿可逆）</div>
+    </div>
+  </div>
+  <div class="page-num">10 / 11</div>
+</div>
+
+<!-- ============================================ -->
+<!-- SLIDE 11: Q&A -->
+<!-- ============================================ -->
+<div class="slide bg-gradient center-stack" id="s10">
+  <div class="corner-decor top-right" style="width:500px;height:500px;opacity:0.1;"></div>
+  <div class="corner-decor bottom-left" style="width:400px;height:400px;opacity:0.06;"></div>
+  <h1 style="font-size:96px;">Questions?</h1>
+  <p class="subtitle" style="max-width:900px;margin-top:16px;">
+    把繁瑣交給 AI，把判斷留給自己
+  </p>
+  <p class="small-text" style="opacity:0.7;max-width:900px;margin-top:8px;">
+    對自家公司的內部系統，AI 跟工具不需要新 API，<br>只要能看見 DOM，就能變成自己的 RPA。
+  </p>
+  <div style="margin-top:40px;display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+    <div class="card-dark" style="padding:14px 24px;text-align:left;">
+      <div style="font-size:14px;color:#A7F3D0;">手冊範本</div>
+      <div style="font-size:18px;">project/CLAUDE.md</div>
+    </div>
+    <div class="card-dark" style="padding:14px 24px;text-align:left;">
+      <div style="font-size:14px;color:#A7F3D0;">核心工具</div>
+      <div style="font-size:18px;">opencli browser × Claude Code</div>
+    </div>
+    <div class="card-dark" style="padding:14px 24px;text-align:left;">
+      <div style="font-size:14px;color:#A7F3D0;">適用對象</div>
+      <div style="font-size:18px;">任何 DOM 操作得到的內部系統</div>
+    </div>
+  </div>
+  <div class="page-num" style="color:#A7F3D0;">11 / 11</div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="nav-hint">← → / Click / Swipe to navigate &nbsp;|&nbsp; F = fullscreen</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function showSlide(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    showSlide(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    showSlide(current - 1);
+  } else if (e.key === 'Home') {
+    showSlide(0);
+  } else if (e.key === 'End') {
+    showSlide(total - 1);
+  } else if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+});
+
+// Touch
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    diff > 0 ? showSlide(current + 1) : showSlide(current - 1);
+  }
+});
+
+// Click
+document.addEventListener('click', (e) => {
+  if (e.target.closest('a, button, input, code')) return;
+  if (e.clientX > window.innerWidth / 2) {
+    showSlide(current + 1);
+  } else {
+    showSlide(current - 1);
+  }
+});
+</script>
+
+</body>
+</html>
